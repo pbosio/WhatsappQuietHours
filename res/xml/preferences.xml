@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    <CheckBoxPreference android:title="@string/pref_hide_launcher" android:key="pref_hide_launcher" android:summary="@string/pref_hide_launcher_sum"/>
+    <CheckBoxPreference android:key="pref_custom_quiet_hours" android:title="@string/pref_custom_quiet_hour" android:disableDependentsState="false" android:summary="@string/pref_custom_quiet_hour_sum"/>
+    <ar.pbosio.whatsappquiethours.TimeRangePreference android:key="pref_timerange" android:dependency="pref_custom_quiet_hours" android:persistent="true"/>
+    <CheckBoxPreference android:key="pref_mute_notifications" android:title="@string/pref_mute_notifications" android:dependency="pref_custom_quiet_hours"/>
+    <CheckBoxPreference android:key="pref_disable_vibrations" android:title="@string/pref_disable_vibrations" android:dependency="pref_custom_quiet_hours"/>
+    <CheckBoxPreference android:key="pref_disable_notification_light" android:title="@string/pref_disable_notification_light" android:dependency="pref_custom_quiet_hours"/>
+    
+
+</PreferenceScreen>
