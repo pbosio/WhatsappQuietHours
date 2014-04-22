@@ -18,7 +18,8 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 public class XposedMod implements IXposedHookLoadPackage {
 	
 	private static final Helper mSettingsHelp = new Helper();
-	private static int OPTION_ITEM_ID = -1;
+	private static final String QUIETHOURS_OPTION_TITLE = "Quiet hours";
+	private static final int QUIETHOURS_OPTION_ID = -1;
 	
 	private boolean isQuietHour()
 	{
@@ -122,8 +123,7 @@ public class XposedMod implements IXposedHookLoadPackage {
 				@Override
 				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
 					try {
-						Object Menuitem = XposedHelpers.callMethod(param.args[0], "add","Quiet Hours");
-						OPTION_ITEM_ID = (Integer)XposedHelpers.callMethod(Menuitem,"getItemId");
+						XposedHelpers.callMethod(param.args[0], "add",0,QUIETHOURS_OPTION_ID,0,QUIETHOURS_OPTION_TITLE);
 					}
 					catch(Exception e)
 					{
@@ -137,7 +137,7 @@ public class XposedMod implements IXposedHookLoadPackage {
 				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
 					try {
 						int id = (Integer)XposedHelpers.callMethod(param.args[0], "getItemId");
-						if(id == OPTION_ITEM_ID)
+						if(id == QUIETHOURS_OPTION_ID)
 						{
 							Activity act = (Activity) param.thisObject;
 							Intent intent = new Intent(Intent.ACTION_RUN);
