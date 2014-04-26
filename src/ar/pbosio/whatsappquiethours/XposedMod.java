@@ -4,12 +4,14 @@ import static de.robv.android.xposed.XposedBridge.hookAllMethods;
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 
 import android.app.Activity;
+import android.app.AndroidAppHelper;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
-import android.text.format.Time;
+import android.net.Uri;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
@@ -18,65 +20,105 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 public class XposedMod implements IXposedHookLoadPackage {
 	
 	private static final Helper mSettingsHelp = new Helper();
+	
 	private static final String QUIETHOURS_OPTION_TITLE = "Quiet hours";
 	private static final int QUIETHOURS_OPTION_ID = -1;
 	
-	private boolean isQuietHour()
+	private static final String NOTIFICATION_TAG = "let_me_in";
+	
+	private static final int CYCLE_NOT = 1;
+	private static final int CYCLE_URI = 2;
+	
+	private static Uri mNotificationUri = null;
+	private static Notification mNotificationNotif = null;
+	private static int mNotificationId = 0;
+	private static int mNofiticationCycle = 0;
+	
+	private void addCycleUri(Uri uri)
 	{
-		int quietHoursStart = mSettingsHelp.getQuietHourStart();
-		int quietHoursEnd = mSettingsHelp.getQuietHourEnd();
+		mNofiticationCycle |= CYCLE_URI;
+		mNotificationUri = uri;
+	}
+	
+	private void addCycleNotification(Notification not, int Id)
+	{
+		mNofiticationCycle |= CYCLE_NOT;
+		mNotificationNotif = not;
+		mNotificationId = Id;
+	}
+	
+	private boolean isCycleComplete()
+	{
+		boolean ret = (mNofiticationCycle == (CYCLE_URI | CYCLE_NOT));
+		if (ret)
+			mNofiticationCycle = 0;
+		return ret;
+	}
+	
+	private Notification getNotificationToPush()
+	{
+		if (!mSettingsHelp.shouldMuteNotification())
+			mNotificationNotif.sound = mNotificationUri;
 		
-		Time t = new Time();
-		t.setToNow();
-		long now = ((t.hour * 60) + t.minute);
-		
-		Logger.log("current time values-> quietHoursStart: "+quietHoursStart+" quietHoursEnd: "+quietHoursEnd+" now: "+now);
-		if (quietHoursStart == -1 || quietHoursEnd == -1)
-			return false;
-		
-		if (quietHoursEnd <= quietHoursStart)
+		if (mSettingsHelp.shouldDisableNotLED())
 		{
-			if (now >= quietHoursStart && now <= 1440)
-				return true;
-			if (now >= 0 && now <= quietHoursEnd)
-				return true;
-		}
-		else
-		{
-			if (now >= quietHoursStart && now <= quietHoursEnd)
-				return true;
+			mNotificationNotif.ledOffMS = 0;
+			mNotificationNotif.ledOnMS = 0;
+			mNotificationNotif.flags &= ~Notification.FLAG_SHOW_LIGHTS;	
 		}
 		
-		return false;
+		if (mSettingsHelp.shouldDisableVibrations())
+		{
+			mNotificationNotif.vibrate = null;
+		}
+		
+		return mNotificationNotif;
 	}
 	
 	@Override
 	public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
 		
 		if (lpparam.packageName.equals("com.whatsapp"))
-		{
+		{				
+			hookAllMethods(MediaPlayer.class, "setDataSource", new XC_MethodHook()
+			{
+				@Override
+				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {					
+					try {
+						if (param.args.length == 2) {
+							if (param.args[1] instanceof Uri) {
+								Logger.log("START MediaPlayer setDataSource "+ param.args.length);
+								addCycleUri((Uri) param.args[1]);
+							}
+						}
+					} catch (Exception e) {
+						Logger.log("MediaPlayer setDataSource error",e);
+					}
+				}
+			});
+			
 			hookAllMethods(MediaPlayer.class, "start", new XC_MethodHook()
 			{
 				@Override
 				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-					try {			
-						if (isQuietHour())
-						{
-							Logger.log("I'M IN QUIET HOURS");
-							if (mSettingsHelp.shouldMuteNotification())
-							{
-								MediaPlayer mp = (MediaPlayer)param.thisObject;
-								mp.seekTo(mp.getDuration());							
-								mp.setVolume(0, 0);
-							}
-						}
-						else
-						{
-							Logger.log("I'M NOT IN QUIET HOURS");
+					try {						
+						Logger.log("START MediaPlayer start ");
+						
+						if (isCycleComplete()){
+							
+							Logger.log("PUSH notification");
+							MediaPlayer mp = (MediaPlayer)param.thisObject;
+							mp.seekTo(mp.getDuration());							
+							mp.setVolume(0, 0);
+							
+							Context con = AndroidAppHelper.currentApplication().getApplicationContext();
+							NotificationManager notman = (NotificationManager)con.getSystemService(Context.NOTIFICATION_SERVICE);
+							notman.notify(NOTIFICATION_TAG, mNotificationId, getNotificationToPush());
+							
 						}
 						
 					} catch (Exception e) {
-						Logger.log("MediaPlayer error",e);
+						Logger.log("MediaPlayer start error",e);
 					}
 				}
 			});		
@@ -86,30 +128,21 @@ public class XposedMod implements IXposedHookLoadPackage {
 				@Override
 				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
 					try {
-						if (mSettingsHelp.shouldDisableNotLED() || mSettingsHelp.shouldDisableVibrations())
+						if (param.args.length == 3)
 						{
-							if (isQuietHour())
+							if (param.args[0] != null &&((String)param.args[0]).equals(NOTIFICATION_TAG))
 							{
-								for(Object arg : param.args) {
-									if(arg instanceof Notification) {
-										Notification notif = (Notification) arg;
-										
-										if (mSettingsHelp.shouldDisableNotLED())
-										{
-											Logger.log("TRYING TO STOP NOTIFICATION LIGHT");
-											notif.ledOffMS = 0;
-											notif.ledOnMS = 0;
-											notif.flags &= ~Notification.FLAG_SHOW_LIGHTS;
-										}
-										
-										if (mSettingsHelp.shouldDisableVibrations())
-										{
-											Logger.log("TRYING TO STOP VIBRATION");
-											notif.vibrate = null;
-										}
-									}
-								}
+								param.args[0] = null;
+								return;
 							}
+							
+							Logger.log("START NotificationManager notify "+param.args.length);
+							
+							int id = (Integer)param.args[1];
+							Notification not = (Notification)param.args[2];
+							addCycleNotification(not,id);
+							
+							param.setResult(null);
 						}
 					}
 					catch(Exception e)
@@ -154,15 +187,28 @@ public class XposedMod implements IXposedHookLoadPackage {
 			});
 		}
 	}
-	  
+	
 	@SuppressWarnings("unused")
-	private void printArg(Object arg)
+	private void printArgs(Object args[])
 	{
-		if (arg instanceof String)
-			Logger.log("Arg is string: "+((String)arg));
-		if (arg instanceof Integer)
-			Logger.log("Arg is int: "+((Integer)arg));
-		if (arg instanceof CharSequence)
-			Logger.log("Arg is charsequence: "+((CharSequence)arg));		
+		Logger.log("Args count: "+args.length);
+		int i = 0;
+		for(Object arg : args)
+		{
+			printArg(arg,i);
+			i++;
+		}
+	}
+	
+	private void printArg(Object arg,int id)
+	{
+		if (arg != null)
+		{
+			Logger.log("Arg "+id+" is "+arg.getClass().getName()+": "+arg.toString());
+		}
+		else
+		{
+			Logger.log("Arg "+id+" is null");
+		}
 	}
 }

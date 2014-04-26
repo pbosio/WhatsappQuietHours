@@ -1,8 +1,6 @@
 package ar.pbosio.whatsappquiethours;
 
-import android.app.AndroidAppHelper;
-import android.content.ContentResolver;
-import android.provider.Settings;
+import android.text.format.Time;
 import de.robv.android.xposed.XSharedPreferences;
 
 class Helper {
@@ -30,27 +28,36 @@ class Helper {
 	{
 		prefs.reload();
 		boolean ret = prefs.getBoolean("pref_custom_quiet_hours", false);
-		Logger.log("pref_custom_quiet_hours: " + ret);
 		return ret;
 	}
 	
 	public boolean shouldMuteNotification()
 	{
+		prefs.reload();
+		
 		if (isCustom())
 		{
-			boolean ret = prefs.getBoolean("pref_mute_notifications", false);
-			Logger.log("pref_mute_notifications: " + ret);			
+			boolean ret = false;
+			if (isQuietHour())
+			{
+				ret = prefs.getBoolean("pref_mute_notifications", false);
+			}
 			return ret;
 		}
-		return true;
+		return false;
 	}
 	
 	public boolean shouldDisableVibrations()
 	{
+		prefs.reload();
+		
 		if (isCustom())
 		{
-			boolean ret = prefs.getBoolean("pref_disable_vibrations", false);
-			Logger.log("pref_disable_vibrations: " + ret);			
+			boolean ret = false;
+			if (isQuietHour())
+			{
+				ret = prefs.getBoolean("pref_disable_vibrations", false);
+			}
 			return ret;
 		}
 		return false;		
@@ -58,10 +65,15 @@ class Helper {
 	
 	public boolean shouldDisableNotLED()
 	{
+		prefs.reload();
+		
 		if (isCustom())
 		{
-			boolean ret = prefs.getBoolean("pref_disable_notification_light", false);
-			Logger.log("pref_disable_notification_light: " + ret);			
+			boolean ret = false;
+			if (isQuietHour())
+			{
+				ret = prefs.getBoolean("pref_disable_notification_light", false);
+			}
 			return ret;
 		}
 		return false;		
@@ -87,8 +99,36 @@ class Helper {
 			return retValue;
 		}
 		else{
-			ContentResolver resolver = AndroidAppHelper.currentApplication().getContentResolver();
-			return Settings.System.getInt(resolver, key,-1);
+			return -1;
 		}
+	}
+	
+	private boolean isQuietHour()
+	{
+		int quietHoursStart = getQuietHourStart();
+		int quietHoursEnd = getQuietHourEnd();
+		
+		Time t = new Time();
+		t.setToNow();
+		long now = ((t.hour * 60) + t.minute);
+		
+		Logger.log("current time values-> quietHoursStart: "+quietHoursStart+" quietHoursEnd: "+quietHoursEnd+" now: "+now);
+		if (quietHoursStart == -1 || quietHoursEnd == -1)
+			return false;
+		
+		if (quietHoursEnd <= quietHoursStart)
+		{
+			if (now >= quietHoursStart && now <= 1440)
+				return true;
+			if (now >= 0 && now <= quietHoursEnd)
+				return true;
+		}
+		else
+		{
+			if (now >= quietHoursStart && now <= quietHoursEnd)
+				return true;
+		}
+		
+		return false;
 	}
 }

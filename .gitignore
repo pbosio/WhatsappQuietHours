@@ -213,3 +213,5 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+gen/ar/pbosio/whatsappquiethours/R.java
+gen/ar/pbosio/whatsappquiethours/BuildConfig.java
