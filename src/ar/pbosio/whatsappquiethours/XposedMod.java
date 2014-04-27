@@ -55,26 +55,6 @@ public class XposedMod implements IXposedHookLoadPackage {
 		return ret;
 	}
 	
-	private Notification getNotificationToPush()
-	{
-		if (!mSettingsHelp.shouldMuteNotification())
-			mNotificationNotif.sound = mNotificationUri;
-		
-		if (mSettingsHelp.shouldDisableNotLED())
-		{
-			mNotificationNotif.ledOffMS = 0;
-			mNotificationNotif.ledOnMS = 0;
-			mNotificationNotif.flags &= ~Notification.FLAG_SHOW_LIGHTS;	
-		}
-		
-		if (mSettingsHelp.shouldDisableVibrations())
-		{
-			mNotificationNotif.vibrate = null;
-		}
-		
-		return mNotificationNotif;
-	}
-	
 	@Override
 	public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
 		
@@ -106,14 +86,28 @@ public class XposedMod implements IXposedHookLoadPackage {
 						
 						if (isCycleComplete()){
 							
-							Logger.log("PUSH notification");
-							MediaPlayer mp = (MediaPlayer)param.thisObject;
-							mp.seekTo(mp.getDuration());							
-							mp.setVolume(0, 0);
-							
-							Context con = AndroidAppHelper.currentApplication().getApplicationContext();
-							NotificationManager notman = (NotificationManager)con.getSystemService(Context.NOTIFICATION_SERVICE);
-							notman.notify(NOTIFICATION_TAG, mNotificationId, getNotificationToPush());
+							if (mSettingsHelp.isCustom() || mSettingsHelp.isForced())
+							{
+								if (mSettingsHelp.shouldMuteNotification())
+								{
+									Logger.log("CUSTOM mute sound");
+									MediaPlayer mp = (MediaPlayer)param.thisObject;
+									mp.seekTo(mp.getDuration());							
+									mp.setVolume(0, 0);									
+								}						
+							}
+							else
+							{
+								Logger.log("PUSH notification");
+								MediaPlayer mp = (MediaPlayer)param.thisObject;
+								mp.seekTo(mp.getDuration());							
+								mp.setVolume(0, 0);
+								
+								mNotificationNotif.sound = mNotificationUri;
+								Context con = AndroidAppHelper.currentApplication().getApplicationContext();
+								NotificationManager notman = (NotificationManager)con.getSystemService(Context.NOTIFICATION_SERVICE);
+								notman.notify(NOTIFICATION_TAG, mNotificationId, mNotificationNotif);
+							}
 							
 						}
 						
@@ -142,7 +136,26 @@ public class XposedMod implements IXposedHookLoadPackage {
 							Notification not = (Notification)param.args[2];
 							addCycleNotification(not,id);
 							
-							param.setResult(null);
+							if (mSettingsHelp.isCustom() || mSettingsHelp.isForced())
+							{
+								if (mSettingsHelp.shouldDisableNotLED())
+								{
+									Logger.log("CUSTOM disable led");
+									not.ledOffMS = 0;
+									not.ledOnMS = 0;
+									not.flags &= ~Notification.FLAG_SHOW_LIGHTS;	
+								}
+								
+								if (mSettingsHelp.shouldDisableVibrations())
+								{
+									Logger.log("CUSTOM disable vibration");
+									not.vibrate = null;
+								}							
+							}
+							else
+							{
+								param.setResult(null);
+							}
 						}
 					}
 					catch(Exception e)

@@ -31,6 +31,11 @@ class Helper {
 		return ret;
 	}
 	
+	public boolean isForced()
+	{
+		return false;
+	}
+	
 	public boolean shouldMuteNotification()
 	{
 		prefs.reload();

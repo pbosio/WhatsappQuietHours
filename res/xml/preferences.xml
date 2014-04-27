@@ -6,6 +6,4 @@
     <CheckBoxPreference android:key="pref_mute_notifications" android:title="@string/pref_mute_notifications" android:dependency="pref_custom_quiet_hours"/>
     <CheckBoxPreference android:key="pref_disable_vibrations" android:title="@string/pref_disable_vibrations" android:dependency="pref_custom_quiet_hours"/>
     <CheckBoxPreference android:key="pref_disable_notification_light" android:title="@string/pref_disable_notification_light" android:dependency="pref_custom_quiet_hours"/>
-    
-
 </PreferenceScreen>
