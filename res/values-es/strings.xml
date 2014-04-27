@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+
+    <string name="app_name">Whatsapp Quiet Hours</string>
+    <string name="action_settings">Preferencias</string>
+    <string name="pref_hide_launcher">Esconder icono del launcher</string>
+    <string name="pref_hide_launcher_sum">Habilita esto si quieres que el icono de la app no se muestre en el launcher</string>
+    <string name="pref_custom_quiet_hour">Usar quiet hours personalizada</string>
+    <string name="pref_custom_quiet_hour_sum">Usa esto si quieres personalizar el rango de quiet hours o si tu ROM no tiene quiet hours</string>
+    <string name="pref_mute_notifications">Silenciar notificaciones</string>
+    <string name="pref_disable_vibrations">Deshabilitar vibración</string>
+    <string name="pref_disable_notification_light">Deshabilitar luz de notificación</string>
+    <string name="start_time_title">Comienzo</string>
+    <string name="end_time_title">Final</string>
+    <string name="quiet_hours">Quiet Hours</string>
+    
+	<string name="settings_general">WAZAA</string>
+    <string name="settings_help">WAZAA</string>
+    <string name="settings_profile_info">WAZAA</string>
+    <string name="settings_account_info">WAZAA</string>
+    <string name="settings_chat">WAZAA</string>
+    <string name="settings_notifications">WAZAA</string>
+    <string name="menuitem_contacts">WAZAA</string>
+
+</resources>
