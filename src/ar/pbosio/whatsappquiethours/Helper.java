@@ -1,5 +1,6 @@
 package ar.pbosio.whatsappquiethours;
 
+import android.net.Uri;
 import android.text.format.Time;
 import de.robv.android.xposed.XSharedPreferences;
 
@@ -8,10 +9,37 @@ class Helper {
 	private static final String KEY_QUIET_HOURS_END = "quiet_hours_end";
 	
 	XSharedPreferences prefs = null;
+	XSharedPreferences WApref = null;
 	
 	Helper()
 	{
 		prefs = new XSharedPreferences(Constant.PACKAGE_NAME);
+		WApref = new XSharedPreferences("com.whatsapp");
+	}
+	
+	public Uri getWhatsAppNotUri()
+	{
+		WApref.reload();
+		return Uri.parse(WApref.getString("notify_ringtone",""));	
+	}
+	
+	public Uri getWhatsAppGroupUri()
+	{
+		WApref.reload();
+		return Uri.parse(WApref.getString("group_notify_tone",""));	
+	}
+	
+	public Uri getWhatsAppBroadcastUri()
+	{
+		WApref.reload();
+		return Uri.parse(WApref.getString("broadcast_notify_tone",""));	
+	}
+	
+	public boolean isNotificationSound(Uri sound)
+	{
+		return (sound.toString().equals(getWhatsAppNotUri().toString()) || 
+				sound.toString().equals(getWhatsAppGroupUri().toString()) || 
+				sound.toString().equals(getWhatsAppBroadcastUri().toString()));
 	}
 	
 	public int getQuietHourStart()
