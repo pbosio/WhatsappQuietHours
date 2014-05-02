@@ -15,6 +15,7 @@ class NotiManager
 	
 	private Handler mHandler = null;
 	private ArrayList<NotificationData> mNotifications = new ArrayList<NotificationData>();
+	private Uri mSavedSound = null;
 	
 	public NotiManager() 
 	{
@@ -65,11 +66,17 @@ class NotiManager
 		try {
 			NotificationData n = new NotificationData();
 			n.mNotification = noti;
-			n.mSound = null;
 			n.mTag = NOTIFICATION_TAG + (tag == null ? "" : tag);
 			n.mId = id;
 			mNotifications.add(n);
 			getHandler().postDelayed(n, NOTIFICATION_DELAY);
+			
+			if (mSavedSound != null)
+			{
+				n.mNotification.sound = mSavedSound;
+				mSavedSound = null;
+			}
+			
 		} catch (Exception e) {
 			Logger.log("NotiManager: notify error",e);
 		}
@@ -80,11 +87,14 @@ class NotiManager
 		try {
 			for (int i = 0; i < mNotifications.size(); i++) {
 				NotificationData data = mNotifications.get(i);
-				if (data.mSound == null) {
-					data.mSound = sound;
-					data.mNotification.sound = (Uri) sound;
-					break;
+				if (data.mNotification.sound == null) {
+					data.mNotification.sound = (Uri)sound;
+					return;
 				}
+			}
+			if (mNotifications.size()== 0)
+			{
+				mSavedSound = ((Uri)sound);
 			}
 		} catch (Exception e) {
 			Logger.log("NotiManager: addSound error",e);
@@ -96,7 +106,6 @@ class NotiManager
 		Notification mNotification;
 		String mTag;
 		int mId;
-		Object mSound;
 		
 		@Override
 		public void run() {

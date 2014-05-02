@@ -11,6 +11,8 @@ class Helper {
 	XSharedPreferences prefs = null;
 	XSharedPreferences WApref = null;
 	
+	public boolean muteSound = false;
+	
 	Helper()
 	{
 		prefs = new XSharedPreferences(Constant.PACKAGE_NAME);
@@ -41,6 +43,22 @@ class Helper {
 		return (sound.toString().equals(getWhatsAppNotUri().toString()) || 
 				sound.toString().equals(getWhatsAppGroupUri().toString()) || 
 				sound.toString().equals(getWhatsAppBroadcastUri().toString()));
+	}
+	
+	public boolean isInSendSound(Object sound)
+	{
+		String path = ((Uri)sound).toString();
+		return (path.equals(getIncomingPath())||path.equals(getSendMessagePath()));
+	}
+	
+	public String getIncomingPath()
+	{
+		return "android.resource://com.whatsapp/2131099649";
+	}
+	
+	public String getSendMessagePath()
+	{
+		return "android.resource://com.whatsapp/2131099650";
 	}
 	
 	public int getQuietHourStart()

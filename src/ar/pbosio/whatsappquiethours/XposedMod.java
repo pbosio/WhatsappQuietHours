@@ -64,8 +64,12 @@ public class XposedMod implements IXposedHookLoadPackage {
 							if (param.args[1] instanceof Uri) {
 								Logger.log("START MediaPlayer setDataSource "+ param.args.length);
 								
-								if (!getHelper().isCustom() && !getHelper().isForced())						
+								if (!getHelper().isCustom() && !getHelper().isForced() 
+										&& !getHelper().isInSendSound(param.args[1])){		
+									Logger.log("add sound "+((Uri)param.args[1]).toString());
 									getNotiManager().addSound(param.args[1]);
+									getHelper().muteSound = true;
+								}
 							}
 						}
 					} catch (Exception e) {
@@ -78,15 +82,28 @@ public class XposedMod implements IXposedHookLoadPackage {
 			{
 				@Override
 				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-					try {						
-						if (getHelper().isCustom() || getHelper().isForced())
-							if (!getHelper().shouldMuteNotification())
-								return;
-						
+					try {
 						Logger.log("START MediaPlayer start "+param.args.length);
-						MediaPlayer mp = (MediaPlayer)param.thisObject;
-						mp.seekTo(mp.getDuration());							
-						mp.setVolume(0, 0);													
+						boolean mute = false;
+						
+						if (getHelper().isCustom() || getHelper().isForced())
+						{
+							if (getHelper().shouldMuteNotification())
+								mute = true;
+						}
+						else
+						{
+							mute = getHelper().muteSound;
+							getHelper().muteSound = false;
+						}
+						
+						if (mute)
+						{
+							Logger.log("sound muted");
+							MediaPlayer mp = (MediaPlayer)param.thisObject;
+							mp.seekTo(mp.getDuration());							
+							mp.setVolume(0, 0);
+						}
 						
 					} catch (Exception e) {
 						Logger.log("MediaPlayer start error",e);
@@ -126,10 +143,12 @@ public class XposedMod implements IXposedHookLoadPackage {
 								if (getNotiManager().isValidTag(param.args[0]))
 								{
 									param.args[0] = getNotiManager().fixNotificationTag(param.args[0]);
+									Logger.log("notification push");
 									return;
 								}
 								
 								getNotiManager().notify(param.args);
+								Logger.log("notification stopped");
 								param.setResult(null);
 							}
 						}
