@@ -80,14 +80,35 @@ class Helper {
 	
 	public boolean isForced()
 	{
-		return false;
+		prefs.reload();
+		String data = prefs.getString("mute_pref_end", "-1");
+		
+		if (data.equals("-1"))
+			return false;
+		
+		Time now = new Time();
+		Time end = new Time();
+		
+		now.setToNow();
+		boolean r = end.parse3339(data);
+		
+		if (!r){
+			Logger.log("Error parsing mute end time");
+			return false;
+		}
+		
+		return end.after(now);
 	}
 	
 	public boolean shouldMuteNotification()
 	{
 		prefs.reload();
 		
-		if (isCustom())
+		if (isForced())
+		{
+			return prefs.getBoolean("mute_pref_mute_notifications", false);
+		}
+		else if (isCustom())
 		{
 			boolean ret = false;
 			if (isQuietHour())
@@ -103,7 +124,11 @@ class Helper {
 	{
 		prefs.reload();
 		
-		if (isCustom())
+		if (isForced())
+		{
+			return prefs.getBoolean("mute_pref_disable_vibrations", false);
+		}		
+		else if (isCustom())
 		{
 			boolean ret = false;
 			if (isQuietHour())
@@ -119,7 +144,11 @@ class Helper {
 	{
 		prefs.reload();
 		
-		if (isCustom())
+		if (isForced())
+		{
+			return prefs.getBoolean("mute_pref_disable_notification_light", false);
+		}		
+		else if (isCustom())
 		{
 			boolean ret = false;
 			if (isQuietHour())

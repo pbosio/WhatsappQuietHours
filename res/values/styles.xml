@@ -15,4 +15,9 @@
     <style name="MyActionBarTitleText" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
         <item name="android:textColor">#FFFFFFFF</item>
     </style> 
+    
+    <style name="DialogTheme" parent="@android:style/Theme.Holo.Light.Dialog">
+        <item name="android:actionBarStyle">@style/MyActionBar</item>
+    </style>
+        
 </resources>

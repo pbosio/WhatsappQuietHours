@@ -5,6 +5,8 @@ import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 import static de.robv.android.xposed.XposedHelpers.getAdditionalStaticField;
 import static de.robv.android.xposed.XposedHelpers.setAdditionalStaticField;
 
+import java.util.Locale;
+
 import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -21,6 +23,9 @@ public class XposedMod implements IXposedHookLoadPackage {
 	
 	private static final String QUIETHOURS_OPTION_TITLE = "Quiet hours";
 	private static final int QUIETHOURS_OPTION_ID = -1;
+	private static final String MUTE_OPTION_TITLE = "Mute all";
+	private static final String MUTE_OPTION_TITLE_C = "Cancel mute";
+	private static final int MUTE_OPTION_ID = -2;
 	
 	NotiManager getNotiManager()
 	{
@@ -164,7 +169,34 @@ public class XposedMod implements IXposedHookLoadPackage {
 				@Override
 				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
 					try {
-						XposedHelpers.callMethod(param.args[0], "add",0,QUIETHOURS_OPTION_ID,0,QUIETHOURS_OPTION_TITLE);
+						XposedHelpers.callMethod(param.args[0], "add",0,QUIETHOURS_OPTION_ID,0,translate(QUIETHOURS_OPTION_TITLE));
+						
+						String mute = MUTE_OPTION_TITLE;
+						if (getHelper().isForced())
+							mute = MUTE_OPTION_TITLE_C;
+						
+						XposedHelpers.callMethod(param.args[0], "add",0,MUTE_OPTION_ID,0,translate(mute));
+					}
+					catch(Exception e)
+					{
+						Logger.log("Conversations onCreateOptionsMenu error",e);
+					}
+				}
+			});
+			
+			findAndHookMethod("com.whatsapp.Conversations", lpparam.classLoader, "onPrepareOptionsMenu","com.actionbarsherlock.view.Menu",new XC_MethodHook(){
+				@Override
+				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
+					try {
+						Object item = XposedHelpers.callMethod(param.args[0], "findItem",MUTE_OPTION_ID);
+						if (item != null)
+						{						
+							String mute = MUTE_OPTION_TITLE;
+							if (getHelper().isForced())
+								mute = MUTE_OPTION_TITLE_C;
+							
+							XposedHelpers.callMethod(item, "setTitle",translate(mute));
+						}
 					}
 					catch(Exception e)
 					{
@@ -186,6 +218,15 @@ public class XposedMod implements IXposedHookLoadPackage {
 							act.startActivity(intent);
 							param.setResult(true);
 						}
+						else if(id == MUTE_OPTION_ID)
+						{
+							Activity act = (Activity) param.thisObject;
+							Intent intent = new Intent(Intent.ACTION_RUN);
+							intent.setComponent(new ComponentName(Constant.PACKAGE_NAME, Constant.PACKAGE_NAME+".MuteActivity"));
+							intent.putExtra("cancel_mute", getHelper().isForced());
+							act.startActivity(intent);
+							param.setResult(true);
+						}						
 					}
 					catch(Exception e)
 					{
@@ -194,6 +235,21 @@ public class XposedMod implements IXposedHookLoadPackage {
 				}
 			});
 		}
+	}
+	
+	String translate(String s)
+	{
+		if (s.equals(MUTE_OPTION_TITLE))
+		{
+			if (Locale.getDefault().getLanguage().equalsIgnoreCase("es"))
+				return "Silenciar todo";
+		}
+		else if (s.equals(MUTE_OPTION_TITLE_C))
+		{
+			if (Locale.getDefault().getLanguage().equalsIgnoreCase("es"))
+				return "Cancelar silenciado";
+		}
+		return s;
 	}
 	
 	@SuppressWarnings("unused")

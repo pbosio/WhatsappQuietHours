@@ -14,6 +14,12 @@
     <string name="end_time_title">End</string>
     <string name="quiet_hours">Quiet Hours</string>
     
+    <string name="mute_pref_1hour">Mute 1 hour</string>
+    <string name="mute_pref_4hour">Mute 4 hours</string>
+    <string name="mute_pref_8hour">Mute 8 hours</string>
+    <string name="mute_pref_ok">Mute</string>   
+    <string name="mute_title">Mute</string> 
+    
 	<string name="settings_general">WAZAA</string>
     <string name="settings_help">WAZAA</string>
     <string name="settings_profile_info">WAZAA</string>

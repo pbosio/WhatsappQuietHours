@@ -26,6 +26,15 @@
             </intent-filter>
         </activity>
         
+        <activity
+            android:name="ar.pbosio.whatsappquiethours.MuteActivity"
+            android:theme="@style/DialogTheme" 
+            android:label="@string/mute_title" >   
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        
         <activity-alias
                 android:enabled="true"
                 android:name="com.pbosio.whatsappquiethours.MainActivity-Alias"

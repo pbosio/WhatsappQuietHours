@@ -1,0 +1,74 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mute_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context=".MuteActivity" >
+
+    <RadioGroup
+        android:id="@+id/mute_radio_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <RadioButton
+            android:id="@+id/mute_radio_1hour"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:tag="1H"
+            android:text="@string/mute_pref_1hour" />
+
+        <RadioButton
+            android:id="@+id/mute_radio_4hour"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="4H"
+            android:text="@string/mute_pref_4hour" />
+
+        <RadioButton
+            android:id="@+id/mute_radio_8hour"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="8H"
+            android:text="@string/mute_pref_8hour" />
+
+    </RadioGroup>
+
+    <CheckBox
+        android:id="@+id/mute_check_mute"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:tag="mute_pref_mute_notifications"
+        android:checked="true"
+        android:text="@string/pref_mute_notifications" />
+
+    <CheckBox
+        android:id="@+id/mute_check_vibrations"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:tag="mute_pref_disable_vibrations"
+        android:checked="true"
+        android:text="@string/pref_disable_vibrations" />
+
+    <CheckBox
+        android:id="@+id/mute_check_light"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:tag="mute_pref_disable_notification_light"
+        android:checked="true"
+        android:text="@string/pref_disable_notification_light" />
+
+    <Button
+        android:id="@+id/button1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:onClick="onOkPressed"
+        android:text="@string/mute_pref_ok" />
+
+</LinearLayout>
