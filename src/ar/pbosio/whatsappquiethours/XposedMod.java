@@ -2,6 +2,8 @@ package ar.pbosio.whatsappquiethours;
 
 import static de.robv.android.xposed.XposedBridge.hookAllMethods;
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
+import static de.robv.android.xposed.XposedHelpers.getAdditionalStaticField;
+import static de.robv.android.xposed.XposedHelpers.setAdditionalStaticField;
 
 import android.app.Activity;
 import android.app.Notification;
@@ -17,17 +19,42 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
 public class XposedMod implements IXposedHookLoadPackage {
 	
-	private static final Helper mSettingsHelp = new Helper();
-	
 	private static final String QUIETHOURS_OPTION_TITLE = "Quiet hours";
 	private static final int QUIETHOURS_OPTION_ID = -1;
-	private static Uri mLastUri = null;
+	
+	NotiManager getNotiManager()
+	{
+		NotiManager notiManager = (NotiManager)getAdditionalStaticField(NotiManager.class, "NotiManager");
+		if (notiManager == null)
+		{
+			Logger.log(">>> ERROR! notiManager is null");
+		}
+		return notiManager;
+	}
+	
+	Helper getHelper()
+	{
+		Helper helper = (Helper)getAdditionalStaticField(Helper.class, "Helper");
+		if (helper == null)
+		{
+			Logger.log(">>> ERROR! helper is null");
+		}
+		return helper;	
+	}
+	
+	void instanceAuxClasses()
+	{
+		setAdditionalStaticField(NotiManager.class, "NotiManager", new NotiManager());
+		setAdditionalStaticField(Helper.class, "Helper", new Helper());
+	}
 	
 	@Override
 	public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
 		
 		if (lpparam.packageName.equals("com.whatsapp"))
-		{				
+		{	
+			instanceAuxClasses();
+			
 			hookAllMethods(MediaPlayer.class, "setDataSource", new XC_MethodHook()
 			{
 				@Override
@@ -36,7 +63,9 @@ public class XposedMod implements IXposedHookLoadPackage {
 						if (param.args.length == 2) {
 							if (param.args[1] instanceof Uri) {
 								Logger.log("START MediaPlayer setDataSource "+ param.args.length);
-								mLastUri = ((Uri) param.args[1]);
+								
+								if (!getHelper().isCustom() && !getHelper().isForced())						
+									getNotiManager().addSound(param.args[1]);
 							}
 						}
 					} catch (Exception e) {
@@ -50,23 +79,14 @@ public class XposedMod implements IXposedHookLoadPackage {
 				@Override
 				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
 					try {						
+						if (getHelper().isCustom() || getHelper().isForced())
+							if (!getHelper().shouldMuteNotification())
+								return;
+						
 						Logger.log("START MediaPlayer start "+param.args.length);
-						
-						boolean mute = (mSettingsHelp.isCustom() || mSettingsHelp.isForced()) &&
-								mSettingsHelp.shouldMuteNotification();
-						
-						if (!mute)
-						{
-							mute = mSettingsHelp.isNotificationSound(mLastUri);
-						}
-
-						if (mute)
-						{
-							Logger.log("mute sound");
-							MediaPlayer mp = (MediaPlayer)param.thisObject;
-							mp.seekTo(mp.getDuration());							
-							mp.setVolume(0, 0);									
-						}						
+						MediaPlayer mp = (MediaPlayer)param.thisObject;
+						mp.seekTo(mp.getDuration());							
+						mp.setVolume(0, 0);													
 						
 					} catch (Exception e) {
 						Logger.log("MediaPlayer start error",e);
@@ -85,9 +105,9 @@ public class XposedMod implements IXposedHookLoadPackage {
 							
 							Notification not = (Notification)param.args[2];
 							
-							if (mSettingsHelp.isCustom() || mSettingsHelp.isForced())
+							if (getHelper().isCustom() || getHelper().isForced())
 							{
-								if (mSettingsHelp.shouldDisableNotLED())
+								if (getHelper().shouldDisableNotLED())
 								{
 									Logger.log("CUSTOM disable led");
 									not.ledOffMS = 0;
@@ -95,7 +115,7 @@ public class XposedMod implements IXposedHookLoadPackage {
 									not.flags &= ~Notification.FLAG_SHOW_LIGHTS;	
 								}
 								
-								if (mSettingsHelp.shouldDisableVibrations())
+								if (getHelper().shouldDisableVibrations())
 								{
 									Logger.log("CUSTOM disable vibration");
 									not.vibrate = null;
@@ -103,7 +123,14 @@ public class XposedMod implements IXposedHookLoadPackage {
 							}
 							else
 							{
-								not.sound = mSettingsHelp.getWhatsAppNotUri();
+								if (getNotiManager().isValidTag(param.args[0]))
+								{
+									param.args[0] = getNotiManager().fixNotificationTag(param.args[0]);
+									return;
+								}
+								
+								getNotiManager().notify(param.args);
+								param.setResult(null);
 							}
 						}
 					}

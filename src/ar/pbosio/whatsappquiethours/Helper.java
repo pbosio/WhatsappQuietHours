@@ -15,6 +15,7 @@ class Helper {
 	{
 		prefs = new XSharedPreferences(Constant.PACKAGE_NAME);
 		WApref = new XSharedPreferences("com.whatsapp");
+		Logger.log("Helper: new instance");
 	}
 	
 	public Uri getWhatsAppNotUri()
