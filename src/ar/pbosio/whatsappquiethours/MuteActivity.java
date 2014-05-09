@@ -76,10 +76,13 @@ public class MuteActivity extends Activity {
     	try {
 			RadioGroup radGroup = (RadioGroup) findViewById(R.id.mute_radio_group);
 			for (int i = 0; i < radGroup.getChildCount(); i++) {
-				RadioButton b = (RadioButton) radGroup.getChildAt(i);
-				if (b.isChecked()) {
-					setEndTime(b.getTag().toString());
-					break;
+				if (radGroup.getChildAt(i) instanceof RadioButton)
+				{
+					RadioButton b = (RadioButton) radGroup.getChildAt(i);
+					if (b.isChecked()) {
+						setEndTime(b.getTag().toString());
+						break;
+					}
 				}
 			}
 			LinearLayout layout = (LinearLayout) findViewById(R.id.mute_layout);
@@ -99,6 +102,11 @@ public class MuteActivity extends Activity {
 			Logger.log("Error on mute popup",e);
 		}
 		finish();
+    }
+    
+    public void onCancelPressed(View v)
+    {
+    	finish();
     }
     
     @SuppressLint("CommitPrefEdits")

@@ -14,11 +14,12 @@
     <string name="end_time_title">Final</string>
     <string name="quiet_hours">Quiet Hours</string>
     
-    <string name="mute_pref_1hour">Silenciar 1 hora</string>
-    <string name="mute_pref_4hour">Silenciar 4 horas</string>
-    <string name="mute_pref_8hour">Silenciar 8 horas</string>
-    <string name="mute_pref_ok">Silenciar</string>  
-    <string name="mute_title">Silenciar</string>  
+    <string name="mute_pref_1hour">1 hora</string>
+    <string name="mute_pref_4hour">4 horas</string>
+    <string name="mute_pref_8hour">8 horas</string>
+    <string name="mute_pref_ok">Aceptar</string>
+    <string name="mute_pref_cancel">Cancelar</string>  
+    <string name="mute_title">Silenciar por…</string>  
     
 	<string name="settings_general">WAZAA</string>
     <string name="settings_help">WAZAA</string>

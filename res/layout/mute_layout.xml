@@ -36,39 +36,63 @@
             android:layout_height="wrap_content"
             android:tag="8H"
             android:text="@string/mute_pref_8hour" />
-
-    </RadioGroup>
+    </RadioGroup> 
 
     <CheckBox
         android:id="@+id/mute_check_mute"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:tag="mute_pref_mute_notifications"
         android:checked="true"
+        android:tag="mute_pref_mute_notifications"
         android:text="@string/pref_mute_notifications" />
 
     <CheckBox
         android:id="@+id/mute_check_vibrations"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:tag="mute_pref_disable_vibrations"
         android:checked="true"
+        android:tag="mute_pref_disable_vibrations"
         android:text="@string/pref_disable_vibrations" />
 
     <CheckBox
         android:id="@+id/mute_check_light"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:tag="mute_pref_disable_notification_light"
         android:checked="true"
+        android:tag="mute_pref_disable_notification_light"
         android:text="@string/pref_disable_notification_light" />
+    
+	<View
+	    android:layout_width="fill_parent"
+	    android:layout_height="1dp"
+	    android:background="@android:color/darker_gray"/>    
 
-    <Button
-        android:id="@+id/button1"
+    <LinearLayout
+        style="?android:attr/buttonBarStyle"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:clickable="true"
-        android:onClick="onOkPressed"
-        android:text="@string/mute_pref_ok" />
+        android:layout_height="0dip"
+        android:layout_weight="0.29" >
+
+        <Button
+            android:id="@+id/button2"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.50"
+            android:clickable="true"
+            android:onClick="onCancelPressed"
+            android:text="@string/mute_pref_cancel"
+            tools:ignore="NestedWeights" />
+
+        <Button
+            android:id="@+id/button1"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.50"            
+            android:clickable="true"
+            android:onClick="onOkPressed"
+            android:text="@string/mute_pref_ok" />
+    </LinearLayout>
 
 </LinearLayout>

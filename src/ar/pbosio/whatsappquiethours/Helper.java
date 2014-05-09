@@ -45,10 +45,11 @@ class Helper {
 				sound.toString().equals(getWhatsAppBroadcastUri().toString()));
 	}
 	
-	public boolean isInSendSound(Object sound)
+	public boolean isInOutSound(Object sound)
 	{
 		String path = ((Uri)sound).toString();
-		return (path.equals(getIncomingPath())||path.equals(getSendMessagePath()));
+		//return (path.equals(getIncomingPath())||path.equals(getSendMessagePath()));
+		return path.contains("android.resource://com.whatsapp/");
 	}
 	
 	public String getIncomingPath()

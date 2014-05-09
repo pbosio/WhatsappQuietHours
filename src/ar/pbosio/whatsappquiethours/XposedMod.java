@@ -69,10 +69,13 @@ public class XposedMod implements IXposedHookLoadPackage {
 							if (param.args[1] instanceof Uri) {
 								Logger.log("START MediaPlayer setDataSource "+ param.args.length);
 								
-								if (!getHelper().isCustom() && !getHelper().isForced() 
-										&& !getHelper().isInSendSound(param.args[1])){		
-									Logger.log("add sound "+((Uri)param.args[1]).toString());
-									getNotiManager().addSound(param.args[1]);
+								if(!getHelper().isInOutSound(param.args[1]))
+								{
+									if (!getHelper().shouldMuteNotification())
+									{
+										Logger.log("add sound "+((Uri)param.args[1]).toString());
+										getNotiManager().addSound(param.args[1]);
+									}
 									getHelper().muteSound = true;
 								}
 							}
@@ -89,22 +92,11 @@ public class XposedMod implements IXposedHookLoadPackage {
 				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
 					try {
 						Logger.log("START MediaPlayer start "+param.args.length);
-						boolean mute = false;
 						
-						if (getHelper().isCustom() || getHelper().isForced())
-						{
-							if (getHelper().shouldMuteNotification())
-								mute = true;
-						}
-						else
-						{
-							mute = getHelper().muteSound;
-							getHelper().muteSound = false;
-						}
-						
-						if (mute)
+						if (getHelper().muteSound)
 						{
 							Logger.log("sound muted");
+							getHelper().muteSound = false;
 							MediaPlayer mp = (MediaPlayer)param.thisObject;
 							mp.seekTo(mp.getDuration());							
 							mp.setVolume(0, 0);
@@ -125,37 +117,33 @@ public class XposedMod implements IXposedHookLoadPackage {
 						{							
 							Logger.log("START NotificationManager notify "+param.args.length);
 							
+							if (getNotiManager().isValidTag(param.args[0]))
+							{
+								param.args[0] = getNotiManager().fixNotificationTag(param.args[0]);
+								Logger.log("notification push");
+								return;
+							}							
+							
 							Notification not = (Notification)param.args[2];
 							
-							if (getHelper().isCustom() || getHelper().isForced())
+							if (getHelper().shouldDisableNotLED())
 							{
-								if (getHelper().shouldDisableNotLED())
-								{
-									Logger.log("CUSTOM disable led");
-									not.ledOffMS = 0;
-									not.ledOnMS = 0;
-									not.flags &= ~Notification.FLAG_SHOW_LIGHTS;	
-								}
-								
-								if (getHelper().shouldDisableVibrations())
-								{
-									Logger.log("CUSTOM disable vibration");
-									not.vibrate = null;
-								}							
+								Logger.log("CUSTOM disable led");
+								not.ledOffMS = 0;
+								not.ledOnMS = 0;
+								not.flags &= ~Notification.FLAG_SHOW_LIGHTS;	
 							}
-							else
+							
+							if (getHelper().shouldDisableVibrations())
 							{
-								if (getNotiManager().isValidTag(param.args[0]))
-								{
-									param.args[0] = getNotiManager().fixNotificationTag(param.args[0]);
-									Logger.log("notification push");
-									return;
-								}
-								
-								getNotiManager().notify(param.args);
-								Logger.log("notification stopped");
-								param.setResult(null);
-							}
+								Logger.log("CUSTOM disable vibration");
+								not.vibrate = null;
+							}							
+							
+							getNotiManager().notify(param.args);
+							Logger.log("notification stopped");
+							param.setResult(null);
+
 						}
 					}
 					catch(Exception e)
