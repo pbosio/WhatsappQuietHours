@@ -176,7 +176,7 @@ class Helper {
 			}
 			catch(Exception e)
 			{
-				Logger.log("com.pbosio.whatsappquiethoursfix timeRange error ",e);
+				Logger.log("timeRange error ",e);
 			}
 			return retValue;
 		}

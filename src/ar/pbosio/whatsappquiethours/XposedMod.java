@@ -11,7 +11,9 @@ import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ComponentName;
+//import android.content.ContentResolver;
 import android.content.Intent;
+//import android.database.sqlite.SQLiteDatabase;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import de.robv.android.xposed.IXposedHookLoadPackage;
@@ -59,6 +61,66 @@ public class XposedMod implements IXposedHookLoadPackage {
 		if (lpparam.packageName.equals("com.whatsapp"))
 		{	
 			instanceAuxClasses();
+			
+			//SQL TESTING INIT
+			/*hookAllMethods(SQLiteDatabase.class, "execSQL", new XC_MethodHook()
+			{
+				@Override
+				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+					Logger.log("excSQL");
+					printArgs(param.args);
+				}
+			});
+			
+			hookAllMethods(SQLiteDatabase.class, "insert", new XC_MethodHook()
+			{
+				@Override
+				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+					Logger.log("insert");
+					printArgs(param.args);
+				}
+			});		
+			hookAllMethods(SQLiteDatabase.class, "insertOrThrow", new XC_MethodHook()
+			{
+				@Override
+				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+					Logger.log("insertOrThrow");
+					printArgs(param.args);
+				}
+			});		
+			hookAllMethods(SQLiteDatabase.class, "insertWithOnConflict", new XC_MethodHook()
+			{
+				@Override
+				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+					Logger.log("insertWithOnConflict");
+					printArgs(param.args);
+				}
+			});	
+			hookAllMethods(SQLiteDatabase.class, "openDatabase", new XC_MethodHook()
+			{
+				@Override
+				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+					Logger.log("openDatabase");
+					printArgs(param.args);
+				}
+			});	
+			hookAllMethods(SQLiteDatabase.class, "openOrCreateDatabase", new XC_MethodHook()
+			{
+				@Override
+				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+					Logger.log("openOrCreateDatabase");
+					printArgs(param.args);
+				}
+			});	
+			hookAllMethods(ContentResolver.class, "query", new XC_MethodHook()
+			{
+				@Override
+				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+					Logger.log("ContentResolver: query");
+					printArgs(param.args);
+				}
+			});	*/
+			//SQL TESTING END
 			
 			hookAllMethods(MediaPlayer.class, "setDataSource", new XC_MethodHook()
 			{
@@ -138,9 +200,11 @@ public class XposedMod implements IXposedHookLoadPackage {
 							{
 								Logger.log("CUSTOM disable vibration");
 								not.vibrate = null;
-							}							
+							}	
 							
-							getNotiManager().notify(param.args);
+							NotificationManager manager = (NotificationManager)param.thisObject;
+
+							getNotiManager().notify(param.args,manager);
 							Logger.log("notification stopped");
 							param.setResult(null);
 
@@ -231,11 +295,20 @@ public class XposedMod implements IXposedHookLoadPackage {
 		{
 			if (Locale.getDefault().getLanguage().equalsIgnoreCase("es"))
 				return "Silenciar todo";
+			if (Locale.getDefault().getLanguage().equalsIgnoreCase("de"))
+				return "Alle Stumm stellen";
 		}
 		else if (s.equals(MUTE_OPTION_TITLE_C))
 		{
 			if (Locale.getDefault().getLanguage().equalsIgnoreCase("es"))
 				return "Cancelar silenciado";
+			if (Locale.getDefault().getLanguage().equalsIgnoreCase("de"))
+				return "Beende Stummphase";
+		}
+		else if (s.equals(QUIETHOURS_OPTION_TITLE))
+		{
+			if (Locale.getDefault().getLanguage().equalsIgnoreCase("de"))
+				return "Ruhige Stunden";
 		}
 		return s;
 	}

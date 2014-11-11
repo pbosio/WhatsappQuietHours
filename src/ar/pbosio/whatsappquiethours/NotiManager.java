@@ -1,10 +1,8 @@
 package ar.pbosio.whatsappquiethours;
 
 import java.util.ArrayList;
-import android.app.AndroidAppHelper;
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Handler;
 
@@ -31,9 +29,9 @@ class NotiManager
 		return mHandler;
 	}
 
-	public void notify(Object [] args)
+	public void notify(Object [] args,NotificationManager manager)
 	{
-		notify((String)args[0], (Integer)args[1], (Notification)args[2]);
+		notify((String)args[0], (Integer)args[1], (Notification)args[2],manager);
 	}
 	
 	public boolean isValidTag(Object tag)
@@ -61,10 +59,11 @@ class NotiManager
 		return tag;
 	}
 	
-	void notify(String tag, int id, Notification noti)
+	void notify(String tag, int id, Notification noti, NotificationManager manager)
 	{
 		try {
 			NotificationData n = new NotificationData();
+			n.mManager = manager;
 			n.mNotification = noti;
 			n.mTag = NOTIFICATION_TAG + (tag == null ? "" : tag);
 			n.mId = id;
@@ -103,6 +102,7 @@ class NotiManager
 	
 	class NotificationData implements Runnable
 	{
+		NotificationManager mManager;
 		Notification mNotification;
 		String mTag;
 		int mId;
@@ -110,7 +110,16 @@ class NotiManager
 		@Override
 		public void run() {
 			try {
-				mNotifications.remove(this);
+				if (mNotifications != null) {
+					try {
+						mNotifications.remove(this);
+					} catch(Exception e) {
+						Logger.log("NotiManager: Runnable mNotifications error",e);		
+					}
+				}
+				else {
+					Logger.log("NotiManager: Runnable mNotifications == NULL");
+				}
 				getNotificationManager().notify(mTag, mId, mNotification);
 			} catch (Exception e) {
 				Logger.log("NotiManager: Runnable run error",e);
@@ -119,8 +128,11 @@ class NotiManager
 		
 		private NotificationManager getNotificationManager()
 		{
-			Context ret = (Context)AndroidAppHelper.currentApplication().getApplicationContext();
-			return ((NotificationManager)ret.getSystemService(Context.NOTIFICATION_SERVICE));
+			if (mManager == null)
+			{
+				Logger.log("NotiManager: Runnable mManager == NULL");
+			}
+			return mManager;
 		}
 	}
 }
