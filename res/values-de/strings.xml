@@ -13,7 +13,7 @@
     <string name="abc_activity_chooser_view_see_all">Alle ansehen</string>
     <string name="abc_shareactionprovider_share_with_application">Freigeben für %s</string>
     <string name="abc_shareactionprovider_share_with">Freigeben für</string>
-    <string name="app_name">Whatsapp Ruhige Stunden</string>
+    <string name="app_name">WhatsApp Ruhige Stunden</string>
     <string name="action_settings">Einstellungen</string>
     <string name="pref_hide_launcher">Verberge Launcher-Icon</string>
     <string name="pref_hide_launcher_sum">Aktivieren um das App-Icon im Launcher zu verbergen.</string>

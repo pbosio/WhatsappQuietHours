@@ -19,8 +19,12 @@ public class MainActivity extends Activity {
         if (savedInstanceState == null)
             getFragmentManager().beginTransaction().replace(android.R.id.content, new PrefsFragment()).commit();
         
-        ActionBar b = getActionBar();
-        b.setHomeButtonEnabled(true);
+        try{
+        	ActionBar b = getActionBar();
+        	b.setHomeButtonEnabled(true);
+        }catch(Exception e){
+        	Logger.log("couldn't get ActionBar",e);
+        }
 
     }
     

@@ -38,28 +38,17 @@ class Helper {
 		return Uri.parse(WApref.getString("broadcast_notify_tone",""));	
 	}
 	
-	public boolean isNotificationSound(Uri sound)
-	{
-		return (sound.toString().equals(getWhatsAppNotUri().toString()) || 
-				sound.toString().equals(getWhatsAppGroupUri().toString()) || 
-				sound.toString().equals(getWhatsAppBroadcastUri().toString()));
-	}
-	
 	public boolean isInOutSound(Object sound)
 	{
 		String path = ((Uri)sound).toString();
-		//return (path.equals(getIncomingPath())||path.equals(getSendMessagePath()));
 		return path.contains("android.resource://com.whatsapp/");
 	}
 	
-	public String getIncomingPath()
+	public boolean isCallSound(Object sound)
 	{
-		return "android.resource://com.whatsapp/2131099649";
-	}
-	
-	public String getSendMessagePath()
-	{
-		return "android.resource://com.whatsapp/2131099650";
+		WApref.reload();
+		Uri s = Uri.parse(WApref.getString("call_ringtone",""));
+		return  (s.toString().equals(((Uri)sound).toString()));
 	}
 	
 	public int getQuietHourStart()

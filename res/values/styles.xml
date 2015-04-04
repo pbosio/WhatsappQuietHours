@@ -1,19 +1,20 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
     
-    <style name="AppBaseTheme" parent="@style/Theme.AppCompat.Light">
+    <style name="AppBaseTheme" parent="@android:style/Theme.DeviceDefault.Light">
         <item name="android:actionBarStyle">@style/MyActionBar</item>
     </style>
 
     <style name="AppTheme" parent="AppBaseTheme">
     </style>    
     
-    <style name="MyActionBar" parent="@style/Widget.AppCompat.ActionBar">
+    <style name="MyActionBar" parent="@android:style/Widget.DeviceDefault.Light.ActionBar.Solid.Inverse">
         <item name="android:background">@drawable/actionbar_background</item>
         <item name="android:titleTextStyle">@style/MyActionBarTitleText</item>
     </style>    
     
-    <style name="MyActionBarTitleText" parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
+    <style name="MyActionBarTitleText" parent="@android:style/Widget.DeviceDefault.Light.ActionBar.Solid.Inverse">
         <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:textSize">18sp</item>
     </style> 
     
     <style name="DialogTheme" parent="@android:style/Theme.Holo.Light.Dialog">

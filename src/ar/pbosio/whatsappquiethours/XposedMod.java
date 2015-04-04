@@ -11,9 +11,7 @@ import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ComponentName;
-//import android.content.ContentResolver;
 import android.content.Intent;
-//import android.database.sqlite.SQLiteDatabase;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import de.robv.android.xposed.IXposedHookLoadPackage;
@@ -62,66 +60,6 @@ public class XposedMod implements IXposedHookLoadPackage {
 		{	
 			instanceAuxClasses();
 			
-			//SQL TESTING INIT
-			/*hookAllMethods(SQLiteDatabase.class, "execSQL", new XC_MethodHook()
-			{
-				@Override
-				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-					Logger.log("excSQL");
-					printArgs(param.args);
-				}
-			});
-			
-			hookAllMethods(SQLiteDatabase.class, "insert", new XC_MethodHook()
-			{
-				@Override
-				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-					Logger.log("insert");
-					printArgs(param.args);
-				}
-			});		
-			hookAllMethods(SQLiteDatabase.class, "insertOrThrow", new XC_MethodHook()
-			{
-				@Override
-				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-					Logger.log("insertOrThrow");
-					printArgs(param.args);
-				}
-			});		
-			hookAllMethods(SQLiteDatabase.class, "insertWithOnConflict", new XC_MethodHook()
-			{
-				@Override
-				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-					Logger.log("insertWithOnConflict");
-					printArgs(param.args);
-				}
-			});	
-			hookAllMethods(SQLiteDatabase.class, "openDatabase", new XC_MethodHook()
-			{
-				@Override
-				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-					Logger.log("openDatabase");
-					printArgs(param.args);
-				}
-			});	
-			hookAllMethods(SQLiteDatabase.class, "openOrCreateDatabase", new XC_MethodHook()
-			{
-				@Override
-				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-					Logger.log("openOrCreateDatabase");
-					printArgs(param.args);
-				}
-			});	
-			hookAllMethods(ContentResolver.class, "query", new XC_MethodHook()
-			{
-				@Override
-				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-					Logger.log("ContentResolver: query");
-					printArgs(param.args);
-				}
-			});	*/
-			//SQL TESTING END
-			
 			hookAllMethods(MediaPlayer.class, "setDataSource", new XC_MethodHook()
 			{
 				@Override
@@ -131,7 +69,7 @@ public class XposedMod implements IXposedHookLoadPackage {
 							if (param.args[1] instanceof Uri) {
 								Logger.log("START MediaPlayer setDataSource "+ param.args.length);
 								
-								if(!getHelper().isInOutSound(param.args[1]))
+								if(!getHelper().isInOutSound(param.args[1]) && !getHelper().isCallSound(param.args[1]))
 								{
 									if (!getHelper().shouldMuteNotification())
 									{
@@ -217,17 +155,13 @@ public class XposedMod implements IXposedHookLoadPackage {
 				}
 			});
 			
+			//OLD UI SUPPPORT
 			findAndHookMethod("com.whatsapp.Conversations", lpparam.classLoader, "onCreateOptionsMenu","com.actionbarsherlock.view.Menu",new XC_MethodHook(){
 				@Override
 				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
 					try {
-						XposedHelpers.callMethod(param.args[0], "add",0,QUIETHOURS_OPTION_ID,0,translate(QUIETHOURS_OPTION_TITLE));
-						
-						String mute = MUTE_OPTION_TITLE;
-						if (getHelper().isForced())
-							mute = MUTE_OPTION_TITLE_C;
-						
-						XposedHelpers.callMethod(param.args[0], "add",0,MUTE_OPTION_ID,0,translate(mute));
+						XposedHelpers.callMethod(param.args[0], "add",0,QUIETHOURS_OPTION_ID,0,translate(QUIETHOURS_OPTION_TITLE));						
+						XposedHelpers.callMethod(param.args[0], "add",0,MUTE_OPTION_ID,0,get_mute_title());
 					}
 					catch(Exception e)
 					{
@@ -242,12 +176,8 @@ public class XposedMod implements IXposedHookLoadPackage {
 					try {
 						Object item = XposedHelpers.callMethod(param.args[0], "findItem",MUTE_OPTION_ID);
 						if (item != null)
-						{						
-							String mute = MUTE_OPTION_TITLE;
-							if (getHelper().isForced())
-								mute = MUTE_OPTION_TITLE_C;
-							
-							XposedHelpers.callMethod(item, "setTitle",translate(mute));
+						{											
+							XposedHelpers.callMethod(item, "setTitle",get_mute_title());
 						}
 					}
 					catch(Exception e)
@@ -262,23 +192,7 @@ public class XposedMod implements IXposedHookLoadPackage {
 				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
 					try {
 						int id = (Integer)XposedHelpers.callMethod(param.args[0], "getItemId");
-						if(id == QUIETHOURS_OPTION_ID)
-						{
-							Activity act = (Activity) param.thisObject;
-							Intent intent = new Intent(Intent.ACTION_RUN);
-							intent.setComponent(new ComponentName(Constant.PACKAGE_NAME, Constant.PACKAGE_NAME+".MainActivity"));
-							act.startActivity(intent);
-							param.setResult(true);
-						}
-						else if(id == MUTE_OPTION_ID)
-						{
-							Activity act = (Activity) param.thisObject;
-							Intent intent = new Intent(Intent.ACTION_RUN);
-							intent.setComponent(new ComponentName(Constant.PACKAGE_NAME, Constant.PACKAGE_NAME+".MuteActivity"));
-							intent.putExtra("cancel_mute", getHelper().isForced());
-							act.startActivity(intent);
-							param.setResult(true);
-						}						
+						on_item_pressed(id,param);
 					}
 					catch(Exception e)
 					{
@@ -286,7 +200,80 @@ public class XposedMod implements IXposedHookLoadPackage {
 					}
 				}
 			});
+			
+			//NEW UI (CALLINGS) SUPPORT
+			findAndHookMethod("com.actionbarsherlock.app.SherlockFragmentActivity", lpparam.classLoader, "onMenuOpened",int.class,android.view.Menu.class,new XC_MethodHook(){
+				@Override
+				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
+					try {			
+						if (param.args[1] != null && ((Integer)param.args[0]) == android.view.Window.FEATURE_ACTION_BAR){
+							
+							android.view.Menu menu = (android.view.Menu)param.args[1];
+							android.view.MenuItem quietMenuItem = menu.findItem(QUIETHOURS_OPTION_ID);
+							android.view.MenuItem muteMenuItem = menu.findItem(MUTE_OPTION_ID);
+							
+							if (quietMenuItem == null)
+							{
+								quietMenuItem = menu.add(0,QUIETHOURS_OPTION_ID,0,translate(QUIETHOURS_OPTION_TITLE));
+							}
+							if (muteMenuItem == null)
+							{
+								muteMenuItem = menu.add(0,MUTE_OPTION_ID,0,get_mute_title());
+							}
+							else{
+								muteMenuItem.setTitle(get_mute_title());
+							}
+						}
+					}
+					catch(Exception e)
+					{
+						Logger.log("com.actionbarsherlock.app.SherlockFragmentActivity onMenuOpened error",e);
+					}
+				}
+			});
+			
+			findAndHookMethod("com.actionbarsherlock.app.SherlockFragmentActivity", lpparam.classLoader, "onMenuItemSelected",int.class,android.view.MenuItem.class,new XC_MethodHook(){
+				@Override
+				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
+					try {			
+						android.view.MenuItem item = (android.view.MenuItem)param.args[1];
+						on_item_pressed(item.getItemId(),param);
+					}
+					catch(Exception e)
+					{
+						Logger.log("com.actionbarsherlock.app.SherlockFragmentActivity onMenuItemSelected error",e);
+					}
+				}
+			});
 		}
+	}
+	
+	void on_item_pressed(int itemId,de.robv.android.xposed.XC_MethodHook.MethodHookParam param)
+	{
+		if(itemId == QUIETHOURS_OPTION_ID)
+		{
+			Activity act = (Activity) param.thisObject;
+			Intent intent = new Intent(Intent.ACTION_RUN);
+			intent.setComponent(new ComponentName(Constant.PACKAGE_NAME, Constant.PACKAGE_NAME+".MainActivity"));
+			act.startActivity(intent);
+			param.setResult(true);
+		}
+		else if(itemId == MUTE_OPTION_ID)
+		{
+			Activity act = (Activity) param.thisObject;
+			Intent intent = new Intent(Intent.ACTION_RUN);
+			intent.setComponent(new ComponentName(Constant.PACKAGE_NAME, Constant.PACKAGE_NAME+".MuteActivity"));
+			intent.putExtra("cancel_mute", getHelper().isForced());
+			act.startActivity(intent);
+			param.setResult(true);
+		}			
+	}
+	
+	String get_mute_title()
+	{
+		if (getHelper().isForced())
+			return translate(MUTE_OPTION_TITLE_C);
+		return translate(MUTE_OPTION_TITLE);
 	}
 	
 	String translate(String s)

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
 
-    <string name="app_name">Whatsapp Quiet Hours</string>
+    <string name="app_name">WhatsApp Quiet Hours</string>
     <string name="action_settings">Settings</string>
     <string name="pref_hide_launcher">Hide launcher icon</string>
     <string name="pref_hide_launcher_sum">Enable this to hide the app icon from your launcher.</string>
