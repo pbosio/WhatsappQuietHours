@@ -16,7 +16,6 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
 public class XposedMod implements IXposedHookLoadPackage {
@@ -26,6 +25,7 @@ public class XposedMod implements IXposedHookLoadPackage {
 	private static final String MUTE_OPTION_TITLE = "Mute all";
 	private static final String MUTE_OPTION_TITLE_C = "Cancel mute";
 	private static final int MUTE_OPTION_ID = -2;
+	private static final int NEW_CHAT_OPTION_ID = 2131492886;
 	
 	NotiManager getNotiManager()
 	{
@@ -155,84 +155,43 @@ public class XposedMod implements IXposedHookLoadPackage {
 				}
 			});
 			
-			//OLD UI SUPPPORT
-			findAndHookMethod("com.whatsapp.Conversations", lpparam.classLoader, "onCreateOptionsMenu","com.actionbarsherlock.view.Menu",new XC_MethodHook(){
-				@Override
-				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
-					try {
-						XposedHelpers.callMethod(param.args[0], "add",0,QUIETHOURS_OPTION_ID,0,translate(QUIETHOURS_OPTION_TITLE));						
-						XposedHelpers.callMethod(param.args[0], "add",0,MUTE_OPTION_ID,0,get_mute_title());
-					}
-					catch(Exception e)
-					{
-						Logger.log("Conversations onCreateOptionsMenu error",e);
-					}
-				}
-			});
-			
-			findAndHookMethod("com.whatsapp.Conversations", lpparam.classLoader, "onPrepareOptionsMenu","com.actionbarsherlock.view.Menu",new XC_MethodHook(){
-				@Override
-				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
-					try {
-						Object item = XposedHelpers.callMethod(param.args[0], "findItem",MUTE_OPTION_ID);
-						if (item != null)
-						{											
-							XposedHelpers.callMethod(item, "setTitle",get_mute_title());
-						}
-					}
-					catch(Exception e)
-					{
-						Logger.log("Conversations onCreateOptionsMenu error",e);
-					}
-				}
-			});
-			
-			findAndHookMethod("com.whatsapp.Conversations", lpparam.classLoader, "onOptionsItemSelected","com.actionbarsherlock.view.MenuItem",new XC_MethodHook(){
-				@Override
-				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
-					try {
-						int id = (Integer)XposedHelpers.callMethod(param.args[0], "getItemId");
-						on_item_pressed(id,param);
-					}
-					catch(Exception e)
-					{
-						Logger.log("Conversations onOptionsItemSelected error",e);
-					}
-				}
-			});
-			
-			//NEW UI (CALLINGS) SUPPORT
-			findAndHookMethod("com.actionbarsherlock.app.SherlockFragmentActivity", lpparam.classLoader, "onMenuOpened",int.class,android.view.Menu.class,new XC_MethodHook(){
+			findAndHookMethod("android.support.v7.app.ActionBarActivity", lpparam.classLoader, "onMenuOpened",int.class,android.view.Menu.class,new XC_MethodHook(){
 				@Override
 				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
 					try {			
 						if (param.args[1] != null && ((Integer)param.args[0]) == android.view.Window.FEATURE_ACTION_BAR){
 							
 							android.view.Menu menu = (android.view.Menu)param.args[1];
-							android.view.MenuItem quietMenuItem = menu.findItem(QUIETHOURS_OPTION_ID);
-							android.view.MenuItem muteMenuItem = menu.findItem(MUTE_OPTION_ID);
 							
-							if (quietMenuItem == null)
-							{
-								quietMenuItem = menu.add(0,QUIETHOURS_OPTION_ID,0,translate(QUIETHOURS_OPTION_TITLE));
-							}
-							if (muteMenuItem == null)
-							{
-								muteMenuItem = menu.add(0,MUTE_OPTION_ID,0,get_mute_title());
-							}
-							else{
-								muteMenuItem.setTitle(get_mute_title());
+							android.view.MenuItem newchatMenuItem = menu.findItem(NEW_CHAT_OPTION_ID);
+							
+							if (newchatMenuItem != null && newchatMenuItem.isVisible()){
+							
+								android.view.MenuItem quietMenuItem = menu.findItem(QUIETHOURS_OPTION_ID);
+								android.view.MenuItem muteMenuItem = menu.findItem(MUTE_OPTION_ID);
+								
+								if (quietMenuItem == null)
+								{
+									quietMenuItem = menu.add(0,QUIETHOURS_OPTION_ID,0,translate(QUIETHOURS_OPTION_TITLE));
+								}
+								if (muteMenuItem == null)
+								{
+									muteMenuItem = menu.add(0,MUTE_OPTION_ID,0,get_mute_title());
+								}
+								else{
+									muteMenuItem.setTitle(get_mute_title());
+								}
 							}
 						}
 					}
 					catch(Exception e)
 					{
-						Logger.log("com.actionbarsherlock.app.SherlockFragmentActivity onMenuOpened error",e);
+						Logger.log("android.support.v7.app.ActionBarActivity onMenuOpened error",e);
 					}
 				}
 			});
 			
-			findAndHookMethod("com.actionbarsherlock.app.SherlockFragmentActivity", lpparam.classLoader, "onMenuItemSelected",int.class,android.view.MenuItem.class,new XC_MethodHook(){
+			findAndHookMethod("android.support.v7.app.ActionBarActivity", lpparam.classLoader, "onMenuItemSelected",int.class,android.view.MenuItem.class,new XC_MethodHook(){
 				@Override
 				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
 					try {			
@@ -241,7 +200,7 @@ public class XposedMod implements IXposedHookLoadPackage {
 					}
 					catch(Exception e)
 					{
-						Logger.log("com.actionbarsherlock.app.SherlockFragmentActivity onMenuItemSelected error",e);
+						Logger.log("android.support.v7.app.ActionBarActivity onMenuItemSelected error",e);
 					}
 				}
 			});
