@@ -12,8 +12,6 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.media.MediaPlayer;
-import android.net.Uri;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
@@ -27,16 +25,6 @@ public class XposedMod implements IXposedHookLoadPackage {
 	private static final int MUTE_OPTION_ID = -2;
 	private static final int NEW_CHAT_OPTION_ID = 2131492886;
 	
-	NotiManager getNotiManager()
-	{
-		NotiManager notiManager = (NotiManager)getAdditionalStaticField(NotiManager.class, "NotiManager");
-		if (notiManager == null)
-		{
-			Logger.log(">>> ERROR! notiManager is null");
-		}
-		return notiManager;
-	}
-	
 	Helper getHelper()
 	{
 		Helper helper = (Helper)getAdditionalStaticField(Helper.class, "Helper");
@@ -49,7 +37,6 @@ public class XposedMod implements IXposedHookLoadPackage {
 	
 	void instanceAuxClasses()
 	{
-		setAdditionalStaticField(NotiManager.class, "NotiManager", new NotiManager());
 		setAdditionalStaticField(Helper.class, "Helper", new Helper());
 	}
 	
@@ -58,55 +45,7 @@ public class XposedMod implements IXposedHookLoadPackage {
 		
 		if (lpparam.packageName.equals("com.whatsapp"))
 		{	
-			instanceAuxClasses();
-			
-			hookAllMethods(MediaPlayer.class, "setDataSource", new XC_MethodHook()
-			{
-				@Override
-				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {					
-					try {
-						if (param.args.length == 2) {
-							if (param.args[1] instanceof Uri) {
-								Logger.log("START MediaPlayer setDataSource "+ param.args.length);
-								
-								if(!getHelper().isInOutSound(param.args[1]) && !getHelper().isCallSound(param.args[1]))
-								{
-									if (!getHelper().shouldMuteNotification())
-									{
-										Logger.log("add sound "+((Uri)param.args[1]).toString());
-										getNotiManager().addSound(param.args[1]);
-									}
-									getHelper().muteSound = true;
-								}
-							}
-						}
-					} catch (Exception e) {
-						Logger.log("MediaPlayer setDataSource error",e);
-					}
-				}
-			});
-			
-			hookAllMethods(MediaPlayer.class, "start", new XC_MethodHook()
-			{
-				@Override
-				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-					try {
-						Logger.log("START MediaPlayer start "+param.args.length);
-						
-						if (getHelper().muteSound)
-						{
-							Logger.log("sound muted");
-							getHelper().muteSound = false;
-							MediaPlayer mp = (MediaPlayer)param.thisObject;
-							mp.seekTo(mp.getDuration());							
-							mp.setVolume(0, 0);
-						}
-						
-					} catch (Exception e) {
-						Logger.log("MediaPlayer start error",e);
-					}
-				}
-			});		
+			instanceAuxClasses();		
 			
 			hookAllMethods(NotificationManager.class, "notify", new XC_MethodHook()
 			{
@@ -114,21 +53,18 @@ public class XposedMod implements IXposedHookLoadPackage {
 				protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
 					try {
 						if (param.args.length == 3)
-						{							
-							Logger.log("START NotificationManager notify "+param.args.length);
-							
-							if (getNotiManager().isValidTag(param.args[0]))
-							{
-								param.args[0] = getNotiManager().fixNotificationTag(param.args[0]);
-								Logger.log("notification push");
-								return;
-							}							
-							
+						{												
 							Notification not = (Notification)param.args[2];
+							
+							Logger.log("notification");
+							
+							Logger.log("defaults = "+not.defaults);
+							
+							getHelper().reloadPreferences();
 							
 							if (getHelper().shouldDisableNotLED())
 							{
-								Logger.log("CUSTOM disable led");
+								Logger.log("disable led");
 								not.ledOffMS = 0;
 								not.ledOnMS = 0;
 								not.flags &= ~Notification.FLAG_SHOW_LIGHTS;	
@@ -136,16 +72,16 @@ public class XposedMod implements IXposedHookLoadPackage {
 							
 							if (getHelper().shouldDisableVibrations())
 							{
-								Logger.log("CUSTOM disable vibration");
+								Logger.log("disable vibration");
+								not.defaults &= ~Notification.DEFAULT_VIBRATE;
 								not.vibrate = null;
-							}	
+							}
 							
-							NotificationManager manager = (NotificationManager)param.thisObject;
-
-							getNotiManager().notify(param.args,manager);
-							Logger.log("notification stopped");
-							param.setResult(null);
-
+							if (getHelper().shouldMuteNotification())
+							{
+								Logger.log("disable sound");
+								not.sound = null;
+							}							
 						}
 					}
 					catch(Exception e)
@@ -222,6 +158,7 @@ public class XposedMod implements IXposedHookLoadPackage {
 			Activity act = (Activity) param.thisObject;
 			Intent intent = new Intent(Intent.ACTION_RUN);
 			intent.setComponent(new ComponentName(Constant.PACKAGE_NAME, Constant.PACKAGE_NAME+".MuteActivity"));
+			getHelper().reloadPreferences();
 			intent.putExtra("cancel_mute", getHelper().isForced());
 			act.startActivity(intent);
 			param.setResult(true);
@@ -230,6 +167,7 @@ public class XposedMod implements IXposedHookLoadPackage {
 	
 	String get_mute_title()
 	{
+		getHelper().reloadPreferences();
 		if (getHelper().isForced())
 			return translate(MUTE_OPTION_TITLE_C);
 		return translate(MUTE_OPTION_TITLE);

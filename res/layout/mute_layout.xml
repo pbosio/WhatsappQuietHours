@@ -60,12 +60,7 @@
         android:layout_height="wrap_content"
         android:checked="true"
         android:tag="mute_pref_disable_notification_light"
-        android:text="@string/pref_disable_notification_light" />
-    
-	<View
-	    android:layout_width="fill_parent"
-	    android:layout_height="1dp"
-	    android:background="@android:color/darker_gray"/>    
+        android:text="@string/pref_disable_notification_light" />    
 
     <LinearLayout
         style="?android:attr/buttonBarStyle"

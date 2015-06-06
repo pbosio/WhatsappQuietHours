@@ -1,54 +1,34 @@
 package ar.pbosio.whatsappquiethours;
 
-import android.net.Uri;
 import android.text.format.Time;
 import de.robv.android.xposed.XSharedPreferences;
 
+//class Helper implements OnSharedPreferenceChangeListener{
 class Helper {
+	
 	private static final String KEY_QUIET_HOURS_START = "quiet_hours_start";
 	private static final String KEY_QUIET_HOURS_END = "quiet_hours_end";
 	
 	XSharedPreferences prefs = null;
 	XSharedPreferences WApref = null;
 	
-	public boolean muteSound = false;
+	//private boolean ReloadNeeded = false;
 	
 	Helper()
 	{
 		prefs = new XSharedPreferences(Constant.PACKAGE_NAME);
 		WApref = new XSharedPreferences("com.whatsapp");
+		
+		//prefs.registerOnSharedPreferenceChangeListener(this); 
 		Logger.log("Helper: new instance");
 	}
 	
-	public Uri getWhatsAppNotUri()
-	{
-		WApref.reload();
-		return Uri.parse(WApref.getString("notify_ringtone",""));	
-	}
-	
-	public Uri getWhatsAppGroupUri()
-	{
-		WApref.reload();
-		return Uri.parse(WApref.getString("group_notify_tone",""));	
-	}
-	
-	public Uri getWhatsAppBroadcastUri()
-	{
-		WApref.reload();
-		return Uri.parse(WApref.getString("broadcast_notify_tone",""));	
-	}
-	
-	public boolean isInOutSound(Object sound)
-	{
-		String path = ((Uri)sound).toString();
-		return path.contains("android.resource://com.whatsapp/");
-	}
-	
-	public boolean isCallSound(Object sound)
-	{
-		WApref.reload();
-		Uri s = Uri.parse(WApref.getString("call_ringtone",""));
-		return  (s.toString().equals(((Uri)sound).toString()));
+	public void reloadPreferences(){
+		/*if (ReloadNeeded){
+			prefs.reload();
+			ReloadNeeded = false;
+		}*/
+		prefs.reload();
 	}
 	
 	public int getQuietHourStart()
@@ -63,14 +43,12 @@ class Helper {
 	
 	public boolean isCustom()
 	{
-		prefs.reload();
 		boolean ret = prefs.getBoolean("pref_custom_quiet_hours", false);
 		return ret;
 	}
 	
 	public boolean isForced()
 	{
-		prefs.reload();
 		String data = prefs.getString("mute_pref_end", "-1");
 		
 		if (data.equals("-1"))
@@ -92,8 +70,6 @@ class Helper {
 	
 	public boolean shouldMuteNotification()
 	{
-		prefs.reload();
-		
 		if (isForced())
 		{
 			return prefs.getBoolean("mute_pref_mute_notifications", false);
@@ -111,9 +87,7 @@ class Helper {
 	}
 	
 	public boolean shouldDisableVibrations()
-	{
-		prefs.reload();
-		
+	{	
 		if (isForced())
 		{
 			return prefs.getBoolean("mute_pref_disable_vibrations", false);
@@ -131,9 +105,7 @@ class Helper {
 	}
 	
 	public boolean shouldDisableNotLED()
-	{
-		prefs.reload();
-		
+	{		
 		if (isForced())
 		{
 			return prefs.getBoolean("mute_pref_disable_notification_light", false);
@@ -202,4 +174,10 @@ class Helper {
 		
 		return false;
 	}
+
+	/*@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,String key) {
+		ReloadNeeded = true;
+		Logger.log("preference changed: "+key);
+	}*/
 }
