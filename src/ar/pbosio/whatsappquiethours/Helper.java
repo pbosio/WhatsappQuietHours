@@ -1,5 +1,6 @@
 package ar.pbosio.whatsappquiethours;
 
+import android.net.Uri;
 import android.text.format.Time;
 import de.robv.android.xposed.XSharedPreferences;
 
@@ -11,6 +12,8 @@ class Helper {
 	
 	XSharedPreferences prefs = null;
 	XSharedPreferences WApref = null;
+	
+	public boolean muteSound = false;
 	
 	//private boolean ReloadNeeded = false;
 	
@@ -29,6 +32,19 @@ class Helper {
 			ReloadNeeded = false;
 		}*/
 		prefs.reload();
+	}
+	
+	public boolean isInOutSound(Object sound)
+	{
+		String path = ((Uri)sound).toString();
+		return path.contains("android.resource://com.whatsapp/");
+	}
+	
+	public boolean isCallSound(Object sound)
+	{
+		WApref.reload();
+		Uri s = Uri.parse(WApref.getString("call_ringtone",""));
+		return  (s.toString().equals(((Uri)sound).toString()));
 	}
 	
 	public int getQuietHourStart()
