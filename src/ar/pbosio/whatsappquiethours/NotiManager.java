@@ -6,7 +6,7 @@ import android.app.NotificationManager;
 import android.net.Uri;
 import android.os.Handler;
 
-class NotiManager
+public class NotiManager
 {
 	private static final String NOTIFICATION_TAG = "QH;";
 	private static final int NOTIFICATION_DELAY = 2000;
@@ -81,7 +81,7 @@ class NotiManager
 		}
 	}
 	
-	void addSound(Object sound)
+	public void addSound(Object sound)
 	{
 		try {
 			for (int i = 0; i < mNotifications.size(); i++) {

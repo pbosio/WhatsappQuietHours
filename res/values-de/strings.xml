@@ -1,18 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="abc_action_mode_done">Fertig</string>
-    <string name="abc_action_bar_home_description">Zur Startseite</string>
-    <string name="abc_action_bar_up_description">Nach oben</string>
-    <string name="abc_action_menu_overflow_description">Weitere Optionen</string>
-    <string name="abc_searchview_description_search">Suchen</string>
-    <string name="abc_searchview_description_query">Suchanfrage</string>
-    <string name="abc_searchview_description_clear">Suchanfrage löschen</string>
-    <string name="abc_searchview_description_submit">Suchanfrage senden</string>
-    <string name="abc_searchview_description_voice">Sprachsuche</string>
-    <string name="abc_activitychooserview_choose_application">App auswählen</string>
-    <string name="abc_activity_chooser_view_see_all">Alle ansehen</string>
-    <string name="abc_shareactionprovider_share_with_application">Freigeben für %s</string>
-    <string name="abc_shareactionprovider_share_with">Freigeben für</string>
     <string name="app_name">WhatsApp Ruhige Stunden</string>
     <string name="action_settings">Einstellungen</string>
     <string name="pref_hide_launcher">Verberge Launcher-Icon</string>
@@ -25,9 +12,8 @@
     <string name="start_time_title">Start</string>
     <string name="end_time_title">Ende</string>
     <string name="quiet_hours">Quiet Hours</string>
-    <string name="mute_pref_1hour">1 Stunde</string>
-    <string name="mute_pref_4hour">4 Stunden</string>
-    <string name="mute_pref_8hour">8 Stunden</string>
+    <string name="mute_pref_hour">Stunde</string>
+    <string name="mute_pref_hours">Stunden</string>
     <string name="mute_pref_ok">OK</string>
     <string name="mute_pref_cancel">Abbrechen</string>
     <string name="mute_title">Stumm für…</string>

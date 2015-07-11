@@ -14,19 +14,24 @@
     <string name="end_time_title">End</string>
     <string name="quiet_hours">Quiet Hours</string>
     
-    <string name="mute_pref_1hour">1 hour</string>
-    <string name="mute_pref_4hour">4 hours</string>
-    <string name="mute_pref_8hour">8 hours</string>
+    <string name="mute_pref_hour">Hour</string>
+    <string name="mute_pref_hours">Hours</string>
     <string name="mute_pref_ok">OK</string>
     <string name="mute_pref_cancel">Cancel</string>    
     <string name="mute_title">Mute for…</string> 
     
-	<string name="settings_general">WAZAA</string>
-    <string name="settings_help">WAZAA</string>
-    <string name="settings_profile_info">WAZAA</string>
-    <string name="settings_account_info">WAZAA</string>
-    <string name="settings_chat">WAZAA</string>
-    <string name="settings_notifications">WAZAA</string>
-    <string name="menuitem_contacts">WAZAA</string>
+ 	<string name="mute_option_title">Mute all</string>
+    <string name="mute_option_title_c">Cancel mute</string>
+    <string name="quitehourse_option_title">Quiet hours</string>
+	
+	<string name="whitelist">Whitelist</string>
+	<string name="whitelist_empty">Error loading contacts list.\nPlease enable whitelist and/or refresh your contacts in Whatsapp app.</string>
+	<string name="pref_enable_whitelist">Enable Whitelist</string>
+	<string name="pref_enable_whitelist_sum">This will make a copy of your whatsapp\'s contact list into your sdcard</string>
+	<string name="pref_delete_whitelist_data">Delete all Whitelist data</string>
+	<string name="pref_delete_whitelist_data_sum">This include the copy of your contact list in your sdcard</string>
+	<string name="pref_delete_whitelist_data_toast">Whitelist data deleted</string>
+	<string name="pref_delete_whitelist_data_toast_error">Error deleting Whitelist data</string>
+	<string name="pref_respect_whitelist">Respect Whitelist</string>
 
 </resources>

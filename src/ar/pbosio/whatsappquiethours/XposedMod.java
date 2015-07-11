@@ -4,28 +4,33 @@ import static de.robv.android.xposed.XposedBridge.hookAllMethods;
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 import static de.robv.android.xposed.XposedHelpers.getAdditionalStaticField;
 import static de.robv.android.xposed.XposedHelpers.setAdditionalStaticField;
-
-import java.util.Locale;
-
+import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AndroidAppHelper;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.res.XModuleResources;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
+import de.robv.android.xposed.IXposedHookInitPackageResources;
 import de.robv.android.xposed.IXposedHookLoadPackage;
+import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.callbacks.XC_InitPackageResources.InitPackageResourcesParam;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
-public class XposedMod implements IXposedHookLoadPackage {
+public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit, IXposedHookInitPackageResources  {
 	
-	private static final String QUIETHOURS_OPTION_TITLE = "Quiet hours";
 	private static final int QUIETHOURS_OPTION_ID = -1;
-	private static final String MUTE_OPTION_TITLE = "Mute all";
-	private static final String MUTE_OPTION_TITLE_C = "Cancel mute";
 	private static final int MUTE_OPTION_ID = -2;
 	private static final int NEW_GROUP_OPTION_ID = 2131755032;
+	private static final int CONTACTS_REFRESH_OPTION_ID = 2131755033;
+	
+	private static String MODULE_PATH = null;
+	private static XModuleResources ModRes = null;
 	
 	Helper getHelper()
 	{
@@ -58,9 +63,22 @@ public class XposedMod implements IXposedHookLoadPackage {
 	}
 	
 	@Override
+	public void initZygote(StartupParam startupParam) throws Throwable {
+		MODULE_PATH = startupParam.modulePath;
+	}
+	
+	@Override
+	public void handleInitPackageResources(InitPackageResourcesParam resparam) throws Throwable {
+		if (resparam.packageName.equals(Constants.WA_PACKAGE_NAME))
+		{
+			ModRes = XModuleResources.createInstance(MODULE_PATH, resparam.res);
+		}
+	}
+	
+	@Override
 	public void handleLoadPackage(LoadPackageParam lpparam) throws Throwable {
 		
-		if (lpparam.packageName.equals("com.whatsapp"))
+		if (lpparam.packageName.equals(Constants.WA_PACKAGE_NAME))
 		{	
 			instanceAuxClasses();	
 			
@@ -174,35 +192,64 @@ public class XposedMod implements IXposedHookLoadPackage {
 			{
 				hookAllMethods(NotificationManager.class, "notify", new XC_MethodHook()
 				{
+					@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 					@Override
 					protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
 						try {
 							if (param.args.length == 3)
-							{												
+							{							
+								if (param.args[0] != null && ((String)param.args[0]).equals(Helper.EXTRA_FORCE_SHOW_LIGHTS))
+								{
+									return;
+								}
+									
 								Notification not = (Notification)param.args[2];
 								
 								Logger.log("notification");
 								
-								getHelper().reloadPreferences();
+								getHelper().reloadPreferences(true);
 								
-								if (getHelper().shouldDisableNotLED())
+								boolean whitelisted = getHelper().isWhiteListed(not.extras.getString(Notification.EXTRA_TITLE));
+								boolean forced = getHelper().isForced();
+								boolean respectWhitelist = getHelper().shouldRespectWhitelist();
+								
+								if (whitelisted || getHelper().shouldDisableNotLED(forced))
 								{
-									Logger.log("disable led");
+									Logger.log("disable notification's led");
+									if (whitelisted && !(forced && !respectWhitelist))
+									{
+										Logger.log("contact whitelisted, forcing notification led");
+										getHelper().forceLed(not.defaults, not.flags, not.ledOffMS, not.ledOnMS, not.ledARGB,
+												AndroidAppHelper.currentApplication().getApplicationContext(), param.thisObject);
+									}
 									not.ledOffMS = 0;
 									not.ledOnMS = 0;
 									not.flags &= ~Notification.FLAG_SHOW_LIGHTS;	
 								}
 								
-								if (getHelper().shouldDisableVibrations())
+								if (whitelisted || getHelper().shouldDisableVibrations(forced))
 								{
-									Logger.log("disable vibration");
+									Logger.log("disable notification's vibration");
+									if (whitelisted && !(forced && !respectWhitelist))
+									{
+										Logger.log("contact whitelisted, forcing notification vibration");
+										getHelper().forceVibration(not.defaults, not.vibrate, 
+												AndroidAppHelper.currentApplication().getApplicationContext());
+									}
 									not.defaults &= ~Notification.DEFAULT_VIBRATE;
 									not.vibrate = null;
 								}
 								
-								if (getHelper().shouldMuteNotification())
+								if (whitelisted || getHelper().shouldMuteNotification(forced))
 								{
-									Logger.log("disable sound");
+									Logger.log("disable notification's sound");
+									if (whitelisted && !(forced && !respectWhitelist))
+									{
+										Logger.log("contact whitelisted, forcing notification sound");
+										getHelper().forceSound(not.defaults,not.sound, 
+												AndroidAppHelper.currentApplication().getApplicationContext());
+									}
+									not.defaults &= ~Notification.DEFAULT_SOUND;
 									not.sound = null;
 								}							
 							}
@@ -213,10 +260,25 @@ public class XposedMod implements IXposedHookLoadPackage {
 						}
 					}
 				});
+				
+				hookAllMethods(NotificationManager.class, "cancel", new XC_MethodHook() {
+					
+					@Override
+					protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
+						if (param.args.length == 2 && param.args[0] != null 
+								&& Helper.EXTRA_FORCE_SHOW_LIGHTS.equals((String)param.args[0]))
+						{
+							return;
+						}
+						
+						getHelper().cancelLedNotification(param.thisObject);
+					}
+				});
 			}
 			
 			/* HOOKS FOR ALL SDK */
-			findAndHookMethod("android.support.v4.app.FragmentActivity", lpparam.classLoader, "onPrepareOptionsPanel",android.view.View.class,android.view.Menu.class,new XC_MethodHook(){
+			findAndHookMethod("android.support.v4.app.FragmentActivity", lpparam.classLoader, "onPrepareOptionsPanel",
+					android.view.View.class,android.view.Menu.class,new XC_MethodHook(){
 				@Override
 				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
 					try {			
@@ -233,7 +295,7 @@ public class XposedMod implements IXposedHookLoadPackage {
 								
 								if (quietMenuItem == null)
 								{
-									quietMenuItem = menu.add(0,QUIETHOURS_OPTION_ID,0,translate(QUIETHOURS_OPTION_TITLE));
+									quietMenuItem = menu.add(0,QUIETHOURS_OPTION_ID,0,ModRes.getString(R.string.quitehourse_option_title));
 								}
 								if (muteMenuItem == null)
 								{
@@ -252,7 +314,8 @@ public class XposedMod implements IXposedHookLoadPackage {
 				}
 			});
 			
-			findAndHookMethod("android.support.v4.app.FragmentActivity", lpparam.classLoader, "onMenuItemSelected",int.class,android.view.MenuItem.class,new XC_MethodHook(){
+			findAndHookMethod("android.support.v4.app.FragmentActivity", lpparam.classLoader, "onMenuItemSelected",
+					int.class,android.view.MenuItem.class,new XC_MethodHook(){
 				@Override
 				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
 					try {			
@@ -274,7 +337,7 @@ public class XposedMod implements IXposedHookLoadPackage {
 		{
 			Activity act = (Activity) param.thisObject;
 			Intent intent = new Intent(Intent.ACTION_RUN);
-			intent.setComponent(new ComponentName(Constant.PACKAGE_NAME, Constant.PACKAGE_NAME+".MainActivity"));
+			intent.setComponent(new ComponentName(Constants.PACKAGE_NAME, Constants.MAIN_ACTIVITY));
 			act.startActivity(intent);
 			param.setResult(true);
 		}
@@ -282,44 +345,24 @@ public class XposedMod implements IXposedHookLoadPackage {
 		{
 			Activity act = (Activity) param.thisObject;
 			Intent intent = new Intent(Intent.ACTION_RUN);
-			intent.setComponent(new ComponentName(Constant.PACKAGE_NAME, Constant.PACKAGE_NAME+".MuteActivity"));
+			intent.setComponent(new ComponentName(Constants.PACKAGE_NAME, Constants.MUTE_ACTIVITY));
 			getHelper().reloadPreferences();
 			intent.putExtra("cancel_mute", getHelper().isForced());
 			act.startActivity(intent);
 			param.setResult(true);
 		}			
+		else if (itemId == CONTACTS_REFRESH_OPTION_ID)
+		{
+			getHelper().saveContactsJSON();
+		}
 	}
 	
 	String get_mute_title()
 	{
 		getHelper().reloadPreferences();
 		if (getHelper().isForced())
-			return translate(MUTE_OPTION_TITLE_C);
-		return translate(MUTE_OPTION_TITLE);
-	}
-	
-	String translate(String s)
-	{
-		if (s.equals(MUTE_OPTION_TITLE))
-		{
-			if (Locale.getDefault().getLanguage().equalsIgnoreCase("es"))
-				return "Silenciar todo";
-			if (Locale.getDefault().getLanguage().equalsIgnoreCase("de"))
-				return "Alle Stumm stellen";
-		}
-		else if (s.equals(MUTE_OPTION_TITLE_C))
-		{
-			if (Locale.getDefault().getLanguage().equalsIgnoreCase("es"))
-				return "Cancelar silenciado";
-			if (Locale.getDefault().getLanguage().equalsIgnoreCase("de"))
-				return "Beende Stummphase";
-		}
-		else if (s.equals(QUIETHOURS_OPTION_TITLE))
-		{
-			if (Locale.getDefault().getLanguage().equalsIgnoreCase("de"))
-				return "Ruhige Stunden";
-		}
-		return s;
+			return ModRes.getString(R.string.mute_option_title_c);
+		return ModRes.getString(R.string.mute_option_title);
 	}
 	
 	@SuppressWarnings("unused")
@@ -344,5 +387,48 @@ public class XposedMod implements IXposedHookLoadPackage {
 		{
 			Logger.log("Arg "+id+" is null");
 		}
+	}
+	
+	@SuppressWarnings("unused")
+	private void print_children(Object o,String str)
+	{
+		Logger.log(str+o.getClass().getName()+" -> "+o.toString());
+		if (o instanceof android.view.ViewGroup){
+			android.view.ViewGroup ss = (android.view.ViewGroup)o;
+			for (int i=0; i<ss.getChildCount();i++)
+			{
+				print_children(ss.getChildAt(i),str+"/"+i);
+			}
+		}
+	}
+	
+	@SuppressWarnings("unused")
+	private void testNotification(final android.content.Context context)
+	{
+		android.os.Handler handler = new android.os.Handler();
+		handler.postDelayed(new Runnable() {
+			
+			@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+			@Override
+			public void run() {
+				try {
+					Logger.log("test notification....");
+					final Notification.Builder builder = new Notification.Builder(context);
+					builder.setContentTitle("TestContact");
+					builder.setContentText("random message");
+					builder.setDefaults(Notification.DEFAULT_ALL);
+					builder.setAutoCancel(false);
+
+					NotificationManager nm = (NotificationManager) context.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
+					
+					Notification n = builder.build();
+					n.flags = Notification.FLAG_SHOW_LIGHTS | Notification.FLAG_ONLY_ALERT_ONCE;
+					nm.notify(null,3,n);
+				} catch (Exception e) {
+					Logger.log("Error en la notificacion de testeo",e);
+				}
+				
+			}
+		}, 5000);
 	}
 }

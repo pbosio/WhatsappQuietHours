@@ -14,19 +14,23 @@
     <string name="end_time_title">Final</string>
     <string name="quiet_hours">Quiet Hours</string>
     
-    <string name="mute_pref_1hour">1 hora</string>
-    <string name="mute_pref_4hour">4 horas</string>
-    <string name="mute_pref_8hour">8 horas</string>
+    <string name="mute_pref_hour">Hora</string>
+    <string name="mute_pref_hours">Horas</string>
     <string name="mute_pref_ok">Aceptar</string>
     <string name="mute_pref_cancel">Cancelar</string>  
     <string name="mute_title">Silenciar por…</string>  
     
-	<string name="settings_general">WAZAA</string>
-    <string name="settings_help">WAZAA</string>
-    <string name="settings_profile_info">WAZAA</string>
-    <string name="settings_account_info">WAZAA</string>
-    <string name="settings_chat">WAZAA</string>
-    <string name="settings_notifications">WAZAA</string>
-    <string name="menuitem_contacts">WAZAA</string>
+	<string name="mute_option_title">Silenciar todo</string>
+    <string name="mute_option_title_c">Cancelar silenciado</string>
+    
+	<string name="whitelist">Lista Blanca</string>
+	<string name="whitelist_empty">Error cargando la lista de contactos.\nPor favor active la lista blanca y/o refresca tus contactos en la aplicación de Whatsapp.</string>
+	<string name="pref_enable_whitelist">Activar lista blanca</string>
+	<string name="pref_enable_whitelist_sum">Esto hará una copia de tus contactos de Whatsapp en la tarjeta de memoria</string>
+	<string name="pref_delete_whitelist_data">Borrar todos los datos de la lista blanca</string>
+	<string name="pref_delete_whitelist_data_sum">Esto incluye la copia de tu lista de contactos almacenada en la tarjeta de memoria</string>
+	<string name="pref_delete_whitelist_data_toast">Datos de la lista blanca borrados</string>
+	<string name="pref_delete_whitelist_data_toast_error">Error al borrar datos de la lista blanca</string>
+	<string name="pref_respect_whitelist">Respetar lista blanca</string>
 
 </resources>

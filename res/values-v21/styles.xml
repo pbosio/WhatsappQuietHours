@@ -1,0 +1,12 @@
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+        
+    <style name="MyActionBar" parent="@android:style/Widget.Material.ActionBar.Solid">
+        <item name="android:titleTextStyle">@style/MyActionBarTitleText</item>
+    </style>    
+
+    <style name="AppTheme" parent="AppBaseTheme">
+        <item name="android:colorPrimary">#075e54</item>
+        <item name="android:colorPrimaryDark">#054d44</item>
+    </style>
+
+</resources>

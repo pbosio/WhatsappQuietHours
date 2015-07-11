@@ -3,7 +3,7 @@ package ar.pbosio.whatsappquiethours;
 import android.text.format.Time;
 import android.util.Log;
 
-class Logger
+public class Logger
 {
 	static final String TAG = "ar.pbosio.whatsappquiethours";
 	

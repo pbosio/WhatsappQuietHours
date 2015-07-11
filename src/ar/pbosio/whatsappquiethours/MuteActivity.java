@@ -10,8 +10,9 @@ import android.text.format.Time;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
+import android.widget.TextView;
 
 public class MuteActivity extends Activity {
 	
@@ -36,7 +37,7 @@ public class MuteActivity extends Activity {
         {
         	if (b == null)
         	{
-        		Logger.log("Error mute intent extra == NULL");
+        		Logger.log("MuteActivity: error mute intent extra == NULL");
         	}
         	setPreferences();
         }
@@ -52,14 +53,49 @@ public class MuteActivity extends Activity {
 				View view = layout.getChildAt(i);
 				if (view instanceof CheckBox)
 				{
-					if (prefs.getBoolean(view.getTag().toString(), false))
+					((CheckBox)view).setChecked(prefs.getBoolean(view.getTag().toString(), true));
+					
+					if (view.getId() == R.id.mute_check_whitelist && !Helper.CAN_USE_WHITELIST)
 					{
-						((CheckBox)view).setChecked(true);
+						view.setVisibility(View.GONE);
 					}
 				}
 			}
+			
+			SeekBar seekbar = (SeekBar) findViewById(R.id.seekBar1);
+			final TextView hoursTextView = (TextView)findViewById(R.id.hours);
+			final TextView hoursLabel = (TextView)findViewById(R.id.hour_text);
+			
+			seekbar.setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+				
+				@Override
+				public void onStopTrackingTouch(SeekBar seekBar) {
+				}
+				
+				@Override
+				public void onStartTrackingTouch(SeekBar seekBar) {
+				}
+				
+				@Override
+				public void onProgressChanged(SeekBar seekBar, int progress,boolean fromUser) {
+					hoursTextView.setText(String.valueOf(progress+1));
+					hoursLabel.setText(R.string.mute_pref_hours);
+					if (progress == 0){
+						hoursLabel.setText(R.string.mute_pref_hour);
+					}
+				}
+			});
+			
+			int mute_hours = prefs.getInt("mute_all_hours", 1);
+			seekbar.setProgress(mute_hours-1);
+			hoursTextView.setText(String.valueOf(mute_hours));
+			hoursLabel.setText(R.string.mute_pref_hours);
+			if (mute_hours == 1){
+				hoursLabel.setText(R.string.mute_pref_hour);
+			}			
+			
 		} catch (Exception e) {
-			Logger.log("Error setting mute preferences",e);
+			Logger.log("MuteActivity: error setting mute preferences",e);
 		}  
     }
 	
@@ -67,34 +103,25 @@ public class MuteActivity extends Activity {
 	@SuppressWarnings("deprecation")
 	void getPreferences()
 	{
-		prefs = getSharedPreferences(Constant.SHARED_PREFS,MODE_MULTI_PROCESS | MODE_WORLD_READABLE);
+		prefs = getSharedPreferences(Constants.SHARED_PREFS,MODE_MULTI_PROCESS | MODE_WORLD_READABLE);
 		editor = prefs.edit();
 	}
     
     public void onOkPressed(View v)
     {
     	try {
-			RadioGroup radGroup = (RadioGroup) findViewById(R.id.mute_radio_group);
-			for (int i = 0; i < radGroup.getChildCount(); i++) {
-				if (radGroup.getChildAt(i) instanceof RadioButton)
-				{
-					RadioButton b = (RadioButton) radGroup.getChildAt(i);
-					if (b.isChecked()) {
-						setEndTime(b.getTag().toString());
-						break;
-					}
-				}
-			}
+			SeekBar seekbar = (SeekBar) findViewById(R.id.seekBar1);
+			int hours = seekbar.getProgress()+1;
+			setEndTime(hours);
+			editor.putInt("mute_all_hours", hours);
+			
 			LinearLayout layout = (LinearLayout) findViewById(R.id.mute_layout);
+			
 			for (int i = 0; i < layout.getChildCount(); i++) {
 				View view = layout.getChildAt(i);
 				if (view instanceof CheckBox) {
-					if (((CheckBox) view).isChecked()) {
-						editor.putBoolean(view.getTag().toString(), true);
-					}
-					else{
-						editor.remove(view.getTag().toString());
-					}
+					boolean isChecked = ((CheckBox) view).isChecked();
+					editor.putBoolean(view.getTag().toString(), isChecked);
 				}
 			}
 			editor.apply();
@@ -110,18 +137,9 @@ public class MuteActivity extends Activity {
     }
     
     @SuppressLint("CommitPrefEdits")
-	void setEndTime(String tag)
+	void setEndTime(int hours)
     {
     	Calendar c = Calendar.getInstance();
-    	
-    	int hours = 0;
-    	
-    	if(tag.equals("1H"))
-    		hours = 1;
-    	if(tag.equals("4H"))
-    		hours = 4;
-    	if(tag.equals("8H"))
-    		hours = 8;
     	
     	c.add(Calendar.HOUR_OF_DAY, hours);
     	
