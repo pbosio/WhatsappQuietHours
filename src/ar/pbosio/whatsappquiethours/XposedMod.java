@@ -26,7 +26,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 	
 	private static final int QUIETHOURS_OPTION_ID = -1;
 	private static final int MUTE_OPTION_ID = -2;
-	private static final int NEW_GROUP_OPTION_ID = 2131755032;
+	private static final int NEW_GROUP_OPTION_ID = 2131755034;
 	private static final int CONTACTS_REFRESH_OPTION_ID = 2131755033;
 	
 	private static String MODULE_PATH = null;
@@ -305,6 +305,8 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 									muteMenuItem.setTitle(get_mute_title());
 								}
 							}
+							
+							Logger.log("context menu opened");
 						}
 					}
 					catch(Exception e)
@@ -355,6 +357,8 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 		{
 			getHelper().saveContactsJSON();
 		}
+		
+		Logger.log("menu item pressed "+itemId);
 	}
 	
 	String get_mute_title()
