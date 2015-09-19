@@ -192,7 +192,9 @@ public class Helper {
 	{
 		WApref.reload();
 		Uri s = Uri.parse(WApref.getString("call_ringtone",""));
-		return  (s.toString().equals(((Uri)sound).toString()));
+		Uri s2 = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_RINGTONE);
+		String strSoundUri = ((Uri)sound).toString();
+		return  (s.toString().equals(strSoundUri)) || (s2.toString().equals(strSoundUri));
 	}
 	
 	public int getQuietHourStart()
@@ -276,6 +278,10 @@ public class Helper {
 				}
 		}
 
+	}
+	public boolean shouldUseHighPrioNotification()
+	{
+		return prefs.getBoolean("pref_whitelist_use_high_not", false);
 	}
 	
 	public boolean shouldRespectWhitelist()

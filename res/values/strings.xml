@@ -33,5 +33,8 @@
 	<string name="pref_delete_whitelist_data_toast">Whitelist data deleted</string>
 	<string name="pref_delete_whitelist_data_toast_error">Error deleting Whitelist data</string>
 	<string name="pref_respect_whitelist">Respect Whitelist</string>
+	
+	<string name="pref_whitelist_use_high_not">Use PRIORITY_MAX for whitelisted notifications</string>
+	<string name="pref_whitelist_use_high_not_sum">This will change notification\'s priority instead of forcing sound/vibration/led</string>
 
 </resources>

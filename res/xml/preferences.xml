@@ -9,6 +9,7 @@
     <PreferenceCategory android:key="pref_category_whitelist" android:title="@string/whitelist">
     	<CheckBoxPreference android:key="pref_enable_whitelist" android:title="@string/pref_enable_whitelist" android:summary="@string/pref_enable_whitelist_sum"/>
     	<PreferenceScreen android:title="@string/whitelist" android:key="pref_whitelist_intent"><intent android:action="preferences.action.whitelist"/> </PreferenceScreen>
+    	<CheckBoxPreference android:key="pref_whitelist_use_high_not" android:title="@string/pref_whitelist_use_high_not" android:summary="@string/pref_whitelist_use_high_not_sum"/>
     	<PreferenceScreen android:summary="@string/pref_delete_whitelist_data_sum" android:title="@string/pref_delete_whitelist_data" android:key="pref_delete_whitelist"></PreferenceScreen>
     </PreferenceCategory>
 </PreferenceScreen>

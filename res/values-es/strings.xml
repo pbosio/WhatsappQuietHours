@@ -32,5 +32,8 @@
 	<string name="pref_delete_whitelist_data_toast">Datos de la lista blanca borrados</string>
 	<string name="pref_delete_whitelist_data_toast_error">Error al borrar datos de la lista blanca</string>
 	<string name="pref_respect_whitelist">Respetar lista blanca</string>
+	
+	<string name="pref_whitelist_use_high_not">Usar PRIORITY_MAX para las notificaciones</string>
+	<string name="pref_whitelist_use_high_not_sum">Esto cambiará la prioridad de la notificación en lugar de forzar el sonido/vibracion/led</string>
 
 </resources>
