@@ -212,17 +212,6 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 								boolean whitelisted = getHelper().isWhiteListed(not.extras.getString(Notification.EXTRA_TITLE));
 								boolean forced = getHelper().isForced();
 								boolean respectWhitelist = getHelper().shouldRespectWhitelist();
-								boolean useHighPriority = getHelper().shouldUseHighPrioNotification();
-								
-								if (whitelisted && useHighPriority)
-								{
-									if (!forced || (forced && respectWhitelist))
-									{
-										Logger.log("contact whitelisted, using max priority notification");
-										not.priority = Notification.PRIORITY_MAX;
-										return;
-									}
-								}
 								
 								if (whitelisted || getHelper().shouldDisableNotLED(forced))
 								{

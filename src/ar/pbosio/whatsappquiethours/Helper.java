@@ -279,10 +279,6 @@ public class Helper {
 		}
 
 	}
-	public boolean shouldUseHighPrioNotification()
-	{
-		return prefs.getBoolean("pref_whitelist_use_high_not", false);
-	}
 	
 	public boolean shouldRespectWhitelist()
 	{
