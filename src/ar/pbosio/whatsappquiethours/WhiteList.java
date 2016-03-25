@@ -7,9 +7,6 @@ import de.robv.android.xposed.XSharedPreferences;
 
 class WhiteList 
 {
-	private final String GROUP_DIVIDER = " @ ";
-	private final String DISCARD_TITLE = "WhatsApp";
-	
 	public static final String WHITE_LIST_PREF_KEY = "white_list_contacts";
 	public static final String WHITE_LIST_CONTACT_DIVIDER = "#";
 	
@@ -19,36 +16,6 @@ class WhiteList
 	public String getSharedValue()
 	{
 		return m_strSharedValue;
-	}
-	
-	private String getGroupName(String title)
-	{
-		if (title.equals(DISCARD_TITLE))
-		{
-			return null;
-		}
-		
-		String [] split =  title.split(GROUP_DIVIDER);
-		
-		if (split.length <= 1)
-			return null;
-		
-		return split[split.length-1];
-	}
-	
-	private String getContactName(String title, String groupName)
-	{
-		if (title.equals(DISCARD_TITLE))
-		{
-			return null;
-		}
-		
-		if (groupName != null)
-		{
-			return title.substring(0,title.indexOf(GROUP_DIVIDER+groupName)-1);
-			
-		}
-		return title;
 	}
 	
 	public WhiteList(XSharedPreferences prefs) 
@@ -110,42 +77,8 @@ class WhiteList
 		return true;
 	}
 	
-	boolean isContactWhiteListed(String title)
+	boolean isContactIDWhitelisted(String id)
 	{
-		if (title == null)
-			return false;
-					
-		String group = getGroupName(title);
-		String contact = getContactName(title, group);
-		
-		if (contact == null)
-			return false;
-		
-		if (group != null)
-			return false; //no whitelist for contact msg in groups, maybe add preference for that later?
-		
-		Logger.log("Contact Group |"+group+"|");
-		Logger.log("Contact Name |"+contact+"|");
-		
-		return isContactNameWhiteListed(contact);
-	}
-	
-	boolean isContactNameWhiteListed(String contactName)
-	{
-		try {
-			java.util.Set<String> keys = m_WhiteListedContacts.keySet();
-			for (String key: keys)
-			{
-				if (m_WhiteListedContacts.get(key).equals(contactName))
-				{
-					Logger.log(contactName+" WhiteListed");
-					return true;
-				}
-			}
-		} catch (Exception e) {
-			Logger.log("Whitelist: isContactNameWhiteListed error",e);
-		}
-		Logger.log(contactName+" Not WhiteListed");
-		return false;
+		return m_WhiteListedContacts.containsKey(id);
 	}
 };

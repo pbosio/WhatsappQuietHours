@@ -79,6 +79,12 @@ public class MainActivity extends Activity {
             	category.removeAll();
             	category.setTitle("");
             }
+            else if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.LOLLIPOP){
+            	Preference whitelistMethod = this.findPreference("pref_whitelist_method");
+            	if (whitelistMethod != null){
+            		whitelistMethod.setEnabled(false);
+            	}
+            }
             
             
             final Preference pref_delete_whitelist = findPreference("pref_delete_whitelist");

@@ -30,7 +30,8 @@ public class Helper {
 	
 	public static final String EXTRA_FORCE_SHOW_LIGHTS = "android.forceShowLights";
 	
-	public static final boolean CAN_USE_WHITELIST = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP;
+	//public static final boolean CAN_USE_WHITELIST = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP;
+	public static final boolean CAN_USE_WHITELIST = true;
 	
 	private XSharedPreferences prefs = null;
 	private XSharedPreferences WApref = null;
@@ -38,6 +39,7 @@ public class Helper {
 	private DBHelper m_dbHelper = null;
 	
 	public boolean muteSound = false;
+	private boolean wasWhiteListed = false;
 	
 	@SuppressLint("SdCardPath")
 	public Helper()
@@ -173,6 +175,10 @@ public class Helper {
 		{
 			return;
 		}
+		if (prefs.getString("pref_whitelist_method", "zen_mode").equals("zen_mode"))
+		{
+			return;
+		}
 		
 		try {
 			android.app.NotificationManager nm = (android.app.NotificationManager)notificationman;
@@ -207,27 +213,22 @@ public class Helper {
 		return getTimeRange(KEY_QUIET_HOURS_END);
 	}
 	
-	public boolean isWhiteListed(String title)
+	public boolean isSenderWhitelisted()
 	{
 		if (!CAN_USE_WHITELIST)
 		{
 			return false;
 		}
 		
-		if (title == null)
-		{
-			Logger.log("Helper: isWhiteListed title == null");
-			return false;
-		}
-		
 		try {
 			boolean active = prefs.getBoolean("pref_enable_whitelist", false);
-			return active && m_WhiteList.isContactWhiteListed(title);
+			String senderID = m_dbHelper.getLastMessageSenderID();
+			return active && m_WhiteList.isContactIDWhitelisted(senderID);
 		} catch (Exception e) {
 			Logger.log("Helper: isWhiteListed error:",e);
 		}
-		return false;
-	}	
+		return false;		
+	}
 	
 	public void saveContactsJSON()
 	{
@@ -432,5 +433,86 @@ public class Helper {
 		}
 		
 		return false;
+	}
+	
+	
+	public boolean processNotification(Notification not, Object context, Object notManager){
+		Logger.log("processNotification");
+		wasWhiteListed = false;
+		
+		boolean isForced = false;
+		boolean isSenderWhitelisted = false;
+		boolean forcedRespectWhitelist = true;
+		boolean useZenMode = false;
+		
+		boolean force = false;
+
+		if (CAN_USE_WHITELIST){
+			reloadPreferences(true);
+			isSenderWhitelisted = isSenderWhitelisted();
+			forcedRespectWhitelist = shouldRespectWhitelist();
+		}
+		else{
+			reloadPreferences();
+		}
+		
+		isForced = isForced();
+		
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP)
+		{
+			useZenMode = prefs.getString("pref_whitelist_method", "zen_mode").equals("zen_mode");
+			if (useZenMode && isSenderWhitelisted && (!isForced || (isForced && forcedRespectWhitelist))) return false;
+			
+			force = !useZenMode && isSenderWhitelisted && (!isForced || (isForced && forcedRespectWhitelist));
+		}
+		else if (CAN_USE_WHITELIST){
+			if(isSenderWhitelisted && (!isForced || (isForced && forcedRespectWhitelist))){
+				wasWhiteListed = true;
+				return false;
+			}
+		}
+
+		
+		if ((isSenderWhitelisted && !useZenMode) || shouldDisableNotLED(isForced))
+		{
+			if (force){
+				Logger.log("contact whitelisted, forcing notification led");
+				forceLed(not.defaults, not.flags, not.ledOffMS, not.ledOnMS, not.ledARGB,context, notManager);
+			}
+			
+			Logger.log("disable led");
+			not.ledOffMS = 0;
+			not.ledOnMS = 0;
+			not.flags &= ~Notification.FLAG_SHOW_LIGHTS;
+		}
+		
+		if ((isSenderWhitelisted && !useZenMode) || shouldDisableVibrations(isForced))
+		{
+			if (force){
+				Logger.log("contact whitelisted, forcing notification vibration");
+				forceVibration(not.defaults, not.vibrate,context);
+			}
+			
+			Logger.log("disable vibration");
+			not.defaults &= ~Notification.DEFAULT_VIBRATE;
+			not.vibrate = null;
+		}
+		
+		if ((isSenderWhitelisted && !useZenMode) || shouldMuteNotification(isForced))
+		{
+			if (force){
+				Logger.log("contact whitelisted, forcing notification sound");
+				forceSound(not.defaults,not.sound,context);
+			}
+			
+			Logger.log("disable sound");
+			not.defaults &= ~Notification.DEFAULT_SOUND;
+			not.sound = null;
+		}
+		return true;
+	}
+	
+	public boolean wasSenderWhitelisted(){
+		return wasWhiteListed;
 	}
 }

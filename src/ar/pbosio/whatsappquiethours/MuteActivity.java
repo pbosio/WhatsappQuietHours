@@ -43,7 +43,8 @@ public class MuteActivity extends Activity {
         }
     }
     
-    void setPreferences()
+    @SuppressWarnings("unused")
+	void setPreferences()
     {   	
     	try {
 			LinearLayout layout = (LinearLayout)findViewById(R.id.mute_layout);

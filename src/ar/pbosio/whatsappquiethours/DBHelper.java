@@ -16,23 +16,31 @@ class DBHelper
 	
 	@SuppressLint("SdCardPath")
 	static final String WA_DB_PATH = "/data/data/com.whatsapp/databases/wa.db";
+	@SuppressLint("SdCardPath")
+	static final String WA_MSG_PATH = "/data/data/com.whatsapp/databases/msgstore.db";
 	
 	private static DBHelper instance = null;
 	
 	private SQLiteDatabase m_WAContactsDB = null;
+	private SQLiteDatabase m_WAMessagesDB = null;
 	
 	private DBHelper()
 	{
 		try {
 			m_WAContactsDB = SQLiteDatabase.openDatabase(WA_DB_PATH, null, SQLiteDatabase.OPEN_READONLY);
+			m_WAMessagesDB = SQLiteDatabase.openDatabase(WA_MSG_PATH, null, SQLiteDatabase.OPEN_READONLY);
 			
 			Logger.log("DBHelper: new instance");
 			if (m_WAContactsDB == null)
 			{
 				Logger.log("DBHelper: WA Contacts DB == NULL");
 			}
+			if (m_WAMessagesDB == null)
+			{
+				Logger.log("DBHelper: WA Messages DB == NULL");
+			}
 		} catch (Exception e) {
-			Logger.log("DBHelper: error opening WA Contacts DB",e);
+			Logger.log("DBHelper: error opening WA Contacts or Messages DB",e);
 		}
 	}
 	
@@ -88,6 +96,26 @@ class DBHelper
 		}	
 		return null;
 	}
+	
+	public String getLastMessageSenderID(){
+		if (m_WAMessagesDB == null)
+			return "";
+		
+		String ret = "";
+		try {
+			String []select = {"key_remote_jid"};
+			String where = "key_from_me == 0";
+			
+			Cursor cursor = m_WAMessagesDB.query("messages",select,where,null,null,null,"received_timestamp desc","1");
+			cursor.moveToFirst();
+
+			ret = cursor.getString(cursor.getColumnIndex("key_remote_jid"));
+		} catch (Exception e) {
+			Logger.log("DBHelper: error reading SQL DB for last message sender id",e);
+		}
+		
+		return ret;
+	} 
 	
 	
 	static DBHelper Instance()

@@ -34,7 +34,9 @@
 	<string name="pref_delete_whitelist_data_toast_error">Error deleting Whitelist data</string>
 	<string name="pref_respect_whitelist">Respect Whitelist</string>
 	
-	<string name="pref_whitelist_use_high_not">Use PRIORITY_MAX for whitelisted notifications</string>
-	<string name="pref_whitelist_use_high_not_sum">This will change notification\'s priority instead of forcing sound/vibration/led</string>
+	<string name="pref_whitelist_method">Whitelist Method</string>
+	<string name="pref_whitelist_method_sum">Method to be used to implement whitelist</string>
+	<string name="pref_whitelist_method_stream">Play notification in music\'s stream</string>
+	<string name="pref_whitelist_method_zen">Use Alarm\'s exception from Android\'s zen mode/interruption system</string>
 
 </resources>

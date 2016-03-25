@@ -4,6 +4,7 @@ import static de.robv.android.xposed.XposedBridge.hookAllMethods;
 import static de.robv.android.xposed.XposedHelpers.findAndHookMethod;
 import static de.robv.android.xposed.XposedHelpers.getAdditionalStaticField;
 import static de.robv.android.xposed.XposedHelpers.setAdditionalStaticField;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AndroidAppHelper;
@@ -98,7 +99,9 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 									
 									getHelper().reloadPreferences();
 									
-									if(!getHelper().isInOutSound(param.args[1]) && !getHelper().isCallSound(param.args[1]))
+									if(!getHelper().isInOutSound(param.args[1]) 
+									&& !getHelper().isCallSound(param.args[1])
+									&& !getHelper().wasSenderWhitelisted())
 									{
 										if (!getHelper().shouldMuteNotification())
 										{
@@ -154,28 +157,16 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 								}							
 								
 								Notification not = (Notification)param.args[2];
-								getHelper().reloadPreferences();
 								
-								if (getHelper().shouldDisableNotLED())
-								{
-									Logger.log("CUSTOM disable led");
-									not.ledOffMS = 0;
-									not.ledOnMS = 0;
-									not.flags &= ~Notification.FLAG_SHOW_LIGHTS;	
+								boolean fixStream = getHelper().processNotification(not,null,null);
+								
+								if (fixStream){	
+									NotificationManager manager = (NotificationManager)param.thisObject;
+	
+									getNotiManager().notify(param.args,manager);
+									Logger.log("notification stopped");
+									param.setResult(null);
 								}
-								
-								if (getHelper().shouldDisableVibrations())
-								{
-									Logger.log("CUSTOM disable vibration");
-									not.defaults &= ~Notification.DEFAULT_VIBRATE;
-									not.vibrate = null;
-								}	
-								
-								NotificationManager manager = (NotificationManager)param.thisObject;
-
-								getNotiManager().notify(param.args,manager);
-								Logger.log("notification stopped");
-								param.setResult(null);
 
 							}
 						}
@@ -192,7 +183,7 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 			{
 				hookAllMethods(NotificationManager.class, "notify", new XC_MethodHook()
 				{
-					@TargetApi(Build.VERSION_CODES.LOLLIPOP)
+					@SuppressLint({ "NewApi", "InlinedApi" })
 					@Override
 					protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
 						try {
@@ -205,53 +196,13 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 									
 								Notification not = (Notification)param.args[2];
 								
-								Logger.log("notification");
+								boolean bypassZenMode = !getHelper().processNotification(not,
+										AndroidAppHelper.currentApplication().getApplicationContext(),
+										param.thisObject);
 								
-								getHelper().reloadPreferences(true);
-								
-								boolean whitelisted = getHelper().isWhiteListed(not.extras.getString(Notification.EXTRA_TITLE));
-								boolean forced = getHelper().isForced();
-								boolean respectWhitelist = getHelper().shouldRespectWhitelist();
-								
-								if (whitelisted || getHelper().shouldDisableNotLED(forced))
-								{
-									Logger.log("disable notification's led");
-									if (whitelisted && !(forced && !respectWhitelist))
-									{
-										Logger.log("contact whitelisted, forcing notification led");
-										getHelper().forceLed(not.defaults, not.flags, not.ledOffMS, not.ledOnMS, not.ledARGB,
-												AndroidAppHelper.currentApplication().getApplicationContext(), param.thisObject);
-									}
-									not.ledOffMS = 0;
-									not.ledOnMS = 0;
-									not.flags &= ~Notification.FLAG_SHOW_LIGHTS;	
-								}
-								
-								if (whitelisted || getHelper().shouldDisableVibrations(forced))
-								{
-									Logger.log("disable notification's vibration");
-									if (whitelisted && !(forced && !respectWhitelist))
-									{
-										Logger.log("contact whitelisted, forcing notification vibration");
-										getHelper().forceVibration(not.defaults, not.vibrate, 
-												AndroidAppHelper.currentApplication().getApplicationContext());
-									}
-									not.defaults &= ~Notification.DEFAULT_VIBRATE;
-									not.vibrate = null;
-								}
-								
-								if (whitelisted || getHelper().shouldMuteNotification(forced))
-								{
-									Logger.log("disable notification's sound");
-									if (whitelisted && !(forced && !respectWhitelist))
-									{
-										Logger.log("contact whitelisted, forcing notification sound");
-										getHelper().forceSound(not.defaults,not.sound, 
-												AndroidAppHelper.currentApplication().getApplicationContext());
-									}
-									not.defaults &= ~Notification.DEFAULT_SOUND;
-									not.sound = null;
-								}							
+								if (bypassZenMode)
+									not.category = Notification.CATEGORY_ALARM;
+												
 							}
 						}
 						catch(Exception e)

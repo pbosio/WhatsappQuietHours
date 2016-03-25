@@ -33,7 +33,9 @@
 	<string name="pref_delete_whitelist_data_toast_error">Error al borrar datos de la lista blanca</string>
 	<string name="pref_respect_whitelist">Respetar lista blanca</string>
 	
-	<string name="pref_whitelist_use_high_not">Usar PRIORITY_MAX para las notificaciones</string>
-	<string name="pref_whitelist_use_high_not_sum">Esto cambiará la prioridad de la notificación en lugar de forzar el sonido/vibracion/led</string>
+	<string name="pref_whitelist_method">Metodo de Lista Blanca</string>
+	<string name="pref_whitelist_method_sum">Metodo a utilizar para implementar la lista blanca</string>
+	<string name="pref_whitelist_method_stream">Reproducir notificacion como si fuera musica</string>
+	<string name="pref_whitelist_method_zen">Usar excepcion de alarma del modo Zen/modo Interrupciones de Android</string>
 
 </resources>

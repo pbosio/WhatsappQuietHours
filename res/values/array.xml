@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string-array name="listWhiteListMethods">
+	<item>@string/pref_whitelist_method_stream</item>
+	<item>@string/pref_whitelist_method_zen</item>
+</string-array>
+<string-array name="listWhiteListMethodsValues">
+    <item>music_stream</item>
+    <item>zen_mode</item>
+</string-array>
+</resources>
