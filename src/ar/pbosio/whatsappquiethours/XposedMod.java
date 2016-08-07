@@ -27,8 +27,8 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 	
 	private static final int QUIETHOURS_OPTION_ID = -1;
 	private static final int MUTE_OPTION_ID = -2;
-	private static final int NEW_GROUP_OPTION_ID = 2131755042;
-	private static final int CONTACTS_REFRESH_OPTION_ID = 2131755043;
+	private static final int NEW_GROUP_OPTION_ID = 2131689509;
+	private static final int CONTACTS_REFRESH_OPTION_ID = 2131689511;
 	
 	private static String MODULE_PATH = null;
 	private static XModuleResources ModRes = null;
