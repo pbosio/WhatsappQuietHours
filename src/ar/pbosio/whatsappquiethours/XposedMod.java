@@ -27,11 +27,12 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 	
 	private static final int QUIETHOURS_OPTION_ID = -1;
 	private static final int MUTE_OPTION_ID = -2;
-	private static final int NEW_GROUP_OPTION_ID = 2131689509;
-	private static final int CONTACTS_REFRESH_OPTION_ID = 2131689511;
 	
 	private static String MODULE_PATH = null;
 	private static XModuleResources ModRes = null;
+	
+	private static int newGroupOptionID = -1;
+	private static int contactsRefreshOptionID = -1;
 	
 	Helper getHelper()
 	{
@@ -227,17 +228,35 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 				});
 			}
 			
-			/* HOOKS FOR ALL SDK */
-			findAndHookMethod("android.support.v4.app.FragmentActivity", lpparam.classLoader, "onPrepareOptionsPanel",
-					android.view.View.class,android.view.Menu.class,new XC_MethodHook(){
+			/* HOOKS FOR ALL SDK */		
+			findAndHookMethod("com.whatsapp.HomeActivity", lpparam.classLoader, "onPrepareOptionsMenu",
+					android.view.Menu.class,new XC_MethodHook(){
 				@Override
 				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
 					try {			
-						if (param.args[1] != null){
+						if (param.args[0] != null){
 							
-							android.view.Menu menu = (android.view.Menu)param.args[1];
+							android.view.Menu menu = (android.view.Menu)param.args[0];
 							
-							android.view.MenuItem newgroupMenuItem = menu.findItem(NEW_GROUP_OPTION_ID);
+							if (newGroupOptionID ==-1 || contactsRefreshOptionID == -1){
+								
+								android.content.Context context = AndroidAppHelper.currentApplication().getApplicationContext();
+								android.content.res.Resources res  = context.getResources();
+								
+								String newgroup = res.getString(res.getIdentifier("menuitem_groupchat", "string", Constants.WA_PACKAGE_NAME));
+								String refresh = res.getString(res.getIdentifier("menuitem_refresh", "string", Constants.WA_PACKAGE_NAME));
+								
+								for (int i=0;i<menu.size();i++){
+									if (menu.getItem(i).getTitle() == newgroup){
+										newGroupOptionID = menu.getItem(i).getItemId();
+									}
+									else if (menu.getItem(i).getTitle() == refresh){
+										contactsRefreshOptionID = menu.getItem(i).getItemId();
+									}
+								}
+							}
+							
+							android.view.MenuItem newgroupMenuItem = menu.findItem(newGroupOptionID);
 							
 							if (newgroupMenuItem != null && newgroupMenuItem.isVisible()){
 							
@@ -257,27 +276,27 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 								}
 							}
 							
-							Logger.log("context menu opened");
+							Logger.log("options menu prepared");
 						}
 					}
 					catch(Exception e)
 					{
-						Logger.log("android.support.v4.app.FragmentActivity onPrepareOptionsPanel error",e);
+						Logger.log("com.whatsapp.HomeActivity onPrepareOptionsMenu error",e);
 					}
 				}
 			});
 			
-			findAndHookMethod("android.support.v4.app.FragmentActivity", lpparam.classLoader, "onMenuItemSelected",
-					int.class,android.view.MenuItem.class,new XC_MethodHook(){
+			findAndHookMethod("com.whatsapp.HomeActivity", lpparam.classLoader, "onOptionsItemSelected",
+					android.view.MenuItem.class,new XC_MethodHook(){
 				@Override
 				protected void beforeHookedMethod(MethodHookParam param)throws Throwable {
 					try {			
-						android.view.MenuItem item = (android.view.MenuItem)param.args[1];
+						android.view.MenuItem item = (android.view.MenuItem)param.args[0];
 						on_item_pressed(item.getItemId(),param);
 					}
 					catch(Exception e)
 					{
-						Logger.log("android.support.v4.app.FragmentActivity onMenuItemSelected error",e);
+						Logger.log("com.whatsapp.HomeActivity onMenuItemSelected error",e);
 					}
 				}
 			});
@@ -304,8 +323,9 @@ public class XposedMod implements IXposedHookLoadPackage, IXposedHookZygoteInit,
 			act.startActivity(intent);
 			param.setResult(true);
 		}			
-		else if (itemId == CONTACTS_REFRESH_OPTION_ID)
+		else if (itemId == contactsRefreshOptionID)
 		{
+			Logger.log("refreshing contacts");
 			getHelper().saveContactsJSON();
 		}
 		
